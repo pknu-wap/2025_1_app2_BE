@@ -1,13 +1,13 @@
-package com.wap.app2.tagogayo;
+package com.wap.app2.gachitayo;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TagogayoApplication {
+public class GachitayoApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TagogayoApplication.class, args);
+		SpringApplication.run(GachitayoApplication.class, args);
 	}
 
 }
