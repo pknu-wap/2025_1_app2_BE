@@ -1,10 +1,11 @@
 package com.wap.app2.gachitayo.domain.location;
 
+import com.wap.app2.gachitayo.Enum.LocationType;
 import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
 
 @Entity
-public class Destination {
+public class Stopover {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -14,7 +15,7 @@ public class Destination {
     @ManyToOne
     @JoinColumn(name = "party_id")
     private Party party;
-    
-    // 최종 목적지인지 검증을 위한 속성
-    private Boolean isFinal = false;
+
+    @Enumerated(EnumType.STRING)
+    private LocationType stopoverType;
 }
