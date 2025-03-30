@@ -3,10 +3,11 @@ package com.wap.app2.gachitayo.dto.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wap.app2.gachitayo.Enum.GenderOption;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class PartyCreateRequestDto {
     @JsonProperty("party_start")
