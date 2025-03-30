@@ -11,6 +11,16 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StopoverDto {
-    LocationDto location;
-    LocationType stopoverType;
+    private LocationDto location;
+    @JsonProperty("stopover_type")
+    @ValidEnum(enumClass= LocationType.class, message = "Invalid stopover type")
+    private LocationType stopoverType = LocationType.STOPOVER;
+
+    @JsonCreator
+    public void setStopoverType(String stopoverType) {
+        this.stopoverType = LocationType.fromString(stopoverType);
+        if(this.stopoverType == null) {
+            this.stopoverType = LocationType.STOPOVER;
+        }
+    }
 }
