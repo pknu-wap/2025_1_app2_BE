@@ -31,7 +31,7 @@ public class Party {
     @Enumerated(EnumType.STRING)
     private GenderOption genderOption;
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
 }
