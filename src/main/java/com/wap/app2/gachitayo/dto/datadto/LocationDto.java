@@ -1,10 +1,11 @@
 package com.wap.app2.gachitayo.dto.datadto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 public class LocationDto {
     private String name;

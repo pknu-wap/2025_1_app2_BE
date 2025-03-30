@@ -1,11 +1,12 @@
 package com.wap.app2.gachitayo.dto.request;
 
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
-public class StopoverUpdateDto {
-    StopoverDto stopover;
+public class StopoverAddDto {
+    private StopoverDto stopover;
 }
