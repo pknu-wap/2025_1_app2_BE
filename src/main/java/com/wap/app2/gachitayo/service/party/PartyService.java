@@ -13,6 +13,7 @@ import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.repository.location.StopoverRepository;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
 import com.wap.app2.gachitayo.service.location.LocationService;
+import com.wap.app2.gachitayo.service.location.StopoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,8 @@ public class PartyService {
     private final PartyRepository partyRepository;
     private final StopoverRepository stopoverRepository;
     private final LocationService locationService;
+    private final StopoverService stopoverService;
+    private final StopoverMapper stopoverMapper;
 
     @Transactional
     public ResponseEntity<PartyCreateResponseDto> createParty(PartyCreateRequestDto requestDto) {
@@ -102,15 +105,15 @@ public class PartyService {
 
     private List<StopoverResponseDto> toStopoverResponseList(Party party) {
         return party.getStopovers().stream()
-                .map(stopover -> new StopoverResponseDto(party.getId(), StopoverMapper.INSTANCE.toDto(stopover)))
+                .map(stopover -> new StopoverResponseDto(party.getId(), stopoverMapper.toDto(stopover)))
                 .collect(Collectors.toList());
     }
 
     private PartyCreateResponseDto toResponseDto(Party partyEntity, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
-                .startLocation(StopoverMapper.INSTANCE.toDto(startStopover))
-                .destination(StopoverMapper.INSTANCE.toDto(destStopover))
+                .startLocation(stopoverMapper.toDto(startStopover))
+                .destination(stopoverMapper.toDto(destStopover))
                 .maxPerson(partyEntity.getMaxPerson())
                 .radius(partyEntity.getAllowRadius())
                 .genderOption(partyEntity.getGenderOption())
