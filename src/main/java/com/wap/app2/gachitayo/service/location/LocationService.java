@@ -11,9 +11,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class LocationService {
     private final LocationRepository locationRepository;
+    private final LocationMapper locationMapper;
 
     public Location createOrGetLocation(LocationDto locationDto) {
         return locationRepository.findByLatitudeAndLongitude(locationDto.getLatitude(), locationDto.getLongitude())
-                .orElseGet(() -> locationRepository.save(LocationMapper.INSTANCE.toEntity(locationDto)));
+                .orElseGet(() -> locationRepository.save(locationMapper.toEntity(locationDto)));
     }
 }
