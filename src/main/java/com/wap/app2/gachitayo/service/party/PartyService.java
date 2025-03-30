@@ -4,7 +4,7 @@ import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
+import com.wap.app2.gachitayo.dto.request.StopoverAddDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.dto.response.StopoverResponseDto;
@@ -67,23 +67,21 @@ public class PartyService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateStopover(Long partyId, StopoverUpdateDto requestDto) {
+    public ResponseEntity<?> addStopoverToParty(Long partyId, StopoverAddDto requestDto) {
         Party partyEntity = partyRepository.findById(partyId).orElse(null);
         if(partyEntity == null) {
             return notFoundPartyResponseEntity(partyId);
         }
 
         Location locationEntity = locationService.createOrGetLocation(requestDto.getStopover().getLocation());
-        Stopover stopoverEntity = Stopover.builder()
-                .location(locationEntity)
-                .stopoverType(requestDto.getStopover().getStopoverType())
-                .build();
+        Stopover stopoverEntity = stopoverService.findOrCreateStopover(locationEntity, requestDto.getStopover().getStopoverType());
+        locationService.updateStopover(locationEntity, stopoverEntity);
 
         boolean isExist = partyEntity.getStopovers().stream()
                 .anyMatch(stopover -> stopover.getLocation().equals(stopoverEntity.getLocation()));
 
         if(!isExist) {
-            stopoverEntity.setParty(partyEntity);
+            stopoverService.setStopoverToParty(stopoverEntity, partyEntity);
             partyEntity.getStopovers().add(stopoverEntity);
             partyRepository.save(partyEntity);
         }
