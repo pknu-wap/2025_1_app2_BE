@@ -1,6 +1,5 @@
 package com.wap.app2.gachitayo.service.party;
 
-import com.wap.app2.gachitayo.Enum.LocationType;
 import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
@@ -10,7 +9,6 @@ import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.dto.response.StopoverResponseDto;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
-import com.wap.app2.gachitayo.repository.location.StopoverRepository;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
 import com.wap.app2.gachitayo.service.location.LocationService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
@@ -28,7 +26,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PartyService {
     private final PartyRepository partyRepository;
-    private final StopoverRepository stopoverRepository;
     private final LocationService locationService;
     private final StopoverService stopoverService;
     private final StopoverMapper stopoverMapper;
@@ -36,16 +33,12 @@ public class PartyService {
     @Transactional
     public ResponseEntity<PartyCreateResponseDto> createParty(PartyCreateRequestDto requestDto) {
         Location startLocation = locationService.createOrGetLocation(requestDto.getStartLocation().getLocation());
-        Location destLocation = locationService.createOrGetLocation(requestDto.getDestination().getLocation());
+        Stopover startStopover = stopoverService.findOrCreateStopover(startLocation, requestDto.getStartLocation().getStopoverType());
+        locationService.updateStopover(startLocation, startStopover);
 
-        Stopover startStopover = stopoverRepository.save(Stopover.builder()
-                        .location(startLocation)
-                        .stopoverType(LocationType.START)
-                        .build());
-        Stopover destStopover = stopoverRepository.save(Stopover.builder()
-                        .location(destLocation)
-                        .stopoverType(LocationType.DESTINATION)
-                        .build());
+        Location destLocation = locationService.createOrGetLocation(requestDto.getDestination().getLocation());
+        Stopover destStopover = stopoverService.findOrCreateStopover(destLocation, requestDto.getDestination().getStopoverType());
+        locationService.updateStopover(destLocation, destStopover);
 
         Party partyEntity = Party.builder()
                 .stopovers(List.of(startStopover, destStopover))
@@ -54,8 +47,8 @@ public class PartyService {
                 .genderOption(requestDto.getGenderOption())
                 .build();
 
-        startStopover.setParty(partyEntity);
-        destStopover.setParty(partyEntity);
+        stopoverService.setStopoverToParty(startStopover, partyEntity);
+        stopoverService.setStopoverToParty(destStopover, partyEntity);
         partyRepository.save(partyEntity);
 
         return ResponseEntity.ok(toResponseDto(partyEntity, startStopover, destStopover));
