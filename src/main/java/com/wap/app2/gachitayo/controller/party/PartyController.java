@@ -1,6 +1,7 @@
 package com.wap.app2.gachitayo.controller.party;
 
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
+import com.wap.app2.gachitayo.dto.request.StopoverAddDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.service.party.PartyService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,12 @@ public class PartyController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getParty(@PathVariable Long id) {
+    public ResponseEntity<?> getParty(@PathVariable("id") Long id) {
         return partyService.getPartyInformationById(id);
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<?> addStopoverToParty(@PathVariable("id") Long id, @RequestBody StopoverAddDto updateDto) {
+        return partyService.addStopoverToParty(id, updateDto);
     }
 }
