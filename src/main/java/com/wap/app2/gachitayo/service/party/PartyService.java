@@ -58,7 +58,7 @@ public class PartyService {
         return partyRepository.findById(partyId)
                 .map(party -> ResponseEntity.ok(PartyResponseDto.builder()
                         .id(party.getId())
-                        .stopovers(toStopoverResponseList(party))
+                        .stopovers(toStopoverDto(party))
                         .maxPerson(party.getMaxPerson())
                         .genderOption(party.getGenderOption())
                         .build()))
@@ -93,9 +93,9 @@ public class PartyService {
         return ResponseEntity.notFound().build();
     }
 
-    private List<StopoverResponseDto> toStopoverResponseList(Party party) {
+    private List<StopoverDto> toStopoverDto(Party party) {
         return party.getStopovers().stream()
-                .map(stopover -> new StopoverResponseDto(party.getId(), stopoverMapper.toDto(stopover)))
+                .map(stopoverMapper::toDto)
                 .collect(Collectors.toList());
     }
 
