@@ -63,6 +63,7 @@ public class PartyService {
                 .map(party -> ResponseEntity.ok(PartyResponseDto.builder()
                         .id(party.getId())
                         .stopovers(toStopoverDto(party))
+                        .radius(party.getAllowRadius())
                         .maxPerson(party.getMaxPerson())
                         .genderOption(party.getGenderOption())
                         .build()))

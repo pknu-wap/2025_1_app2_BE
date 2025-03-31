@@ -14,7 +14,7 @@ public record PartyResponseDto(
         @JsonProperty("party_stopovers")
         List<StopoverDto> stopovers,
         @JsonProperty("party_radius")
-        Integer radius,
+        Double radius,
         @JsonProperty("party_max_person")
         Integer maxPerson,
         @JsonProperty("party_option")
