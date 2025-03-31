@@ -33,6 +33,7 @@ public class Stopover {
         boolean isUpdated = false;
         if(!Objects.equals(this.location, location)) {
             this.location = location;
+            location.setStopover(this);
             isUpdated = true;
         }
         if(!Objects.equals(this.stopoverType, stopoverType)) {

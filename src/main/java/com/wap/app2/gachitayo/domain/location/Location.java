@@ -21,6 +21,6 @@ public class Location {
     private double longitude;
 
     @Setter
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, orphanRemoval = true, cascade = CascadeType.REMOVE)
     private Stopover stopover;
 }
