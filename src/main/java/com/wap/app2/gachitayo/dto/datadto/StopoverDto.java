@@ -18,6 +18,7 @@ public class StopoverDto {
     private LocationDto location;
     @JsonProperty("stopover_type")
     @ValidEnum(enumClass= LocationType.class, message = "Invalid stopover type")
+    @Builder.Default
     private LocationType stopoverType = LocationType.STOPOVER;
 
     @JsonCreator
