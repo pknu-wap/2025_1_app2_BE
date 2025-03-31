@@ -28,4 +28,9 @@ public class PartyController {
     public ResponseEntity<?> addStopoverToParty(@PathVariable("id") Long id, @RequestBody StopoverDto stopoverDto) {
         return partyService.addStopoverToParty(id, stopoverDto);
     }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateStopover(@PathVariable("id") Long id, @RequestBody StopoverDto stopoverDto) {
+        return partyService.updateStopover(id, stopoverDto);
+    }
 }

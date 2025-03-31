@@ -8,14 +8,17 @@ import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
+import com.wap.app2.gachitayo.repository.location.StopoverRepository;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
 import com.wap.app2.gachitayo.service.location.LocationService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +31,7 @@ public class PartyService {
     private final LocationService locationService;
     private final StopoverService stopoverService;
     private final StopoverMapper stopoverMapper;
+    private final StopoverRepository stopoverRepository;
 
     @Transactional
     public ResponseEntity<PartyCreateResponseDto> createParty(PartyCreateRequestDto requestDto) {
@@ -86,6 +90,25 @@ public class PartyService {
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateStopover(Long partyId, StopoverDto stopoverDto) {
+        if(stopoverDto.getId() == null) {
+            return ResponseEntity.badRequest().body("missing stopover id");
+        }
+
+        Stopover stopoverEntity = stopoverRepository.findById(stopoverDto.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "stopover not found"));
+
+        if(!stopoverEntity.getParty().getId().equals(partyId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("stopover id mismatch to party id");
+        }
+
+        Location locationEntity = (stopoverDto.getLocation() != null)?
+                locationService.createOrGetLocation(stopoverDto.getLocation()) : null;
+
+        return stopoverService.updateStopover(stopoverEntity, locationEntity, stopoverDto.getStopoverType());
     }
 
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
