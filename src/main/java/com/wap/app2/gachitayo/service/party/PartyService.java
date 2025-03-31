@@ -5,7 +5,6 @@ import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverAddDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;

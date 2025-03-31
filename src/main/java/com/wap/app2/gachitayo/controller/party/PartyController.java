@@ -2,7 +2,6 @@ package com.wap.app2.gachitayo.controller.party;
 
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverAddDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.service.party.PartyService;
 import lombok.RequiredArgsConstructor;
