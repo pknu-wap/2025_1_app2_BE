@@ -5,7 +5,7 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Objects;
+
 
 
 @Builder
@@ -32,12 +32,12 @@ public class Stopover {
 
     public boolean update(Location location, LocationType stopoverType) {
         boolean isUpdated = false;
-        if(!Objects.equals(this.location, location)) {
+        if(location != null && !this.location.equals(location)) {
             this.location = location;
-            location.setStopover(this);
+            this.location.getStopovers().add(this);
             isUpdated = true;
         }
-        if(!Objects.equals(this.stopoverType, stopoverType)) {
+        if(stopoverType != null && !this.stopoverType.equals(stopoverType)) {
             this.stopoverType = stopoverType;
             isUpdated = true;
         }
