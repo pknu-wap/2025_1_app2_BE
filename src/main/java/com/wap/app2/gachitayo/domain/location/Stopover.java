@@ -17,7 +17,8 @@ public class Stopover {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "location_id")
     private Location location;
 
     @Setter
