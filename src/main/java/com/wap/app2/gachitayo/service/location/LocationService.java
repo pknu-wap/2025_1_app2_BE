@@ -17,12 +17,13 @@ public class LocationService {
 
     public Location createOrGetLocation(LocationDto locationDto) {
         return locationRepository.findByLatitudeAndLongitude(locationDto.getLatitude(), locationDto.getLongitude())
+                .map(existingLocation -> locationMapper.toEntityWithExisting(locationDto, existingLocation))
                 .orElseGet(() -> locationRepository.save(locationMapper.toEntity(locationDto)));
     }
 
     @Transactional
     public void updateStopover(Location location, Stopover stopover) {
-        location.setStopover(stopover);
+        location.getStopovers().add(stopover);
         locationRepository.save(location);
     }
 }
