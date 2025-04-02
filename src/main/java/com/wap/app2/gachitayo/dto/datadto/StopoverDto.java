@@ -1,6 +1,5 @@
 package com.wap.app2.gachitayo.dto.datadto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wap.app2.gachitayo.Enum.LocationType;
@@ -18,14 +17,5 @@ public class StopoverDto {
     private LocationDto location;
     @JsonProperty("stopover_type")
     @ValidEnum(enumClass= LocationType.class, message = "Invalid stopover type")
-    @Builder.Default
-    private LocationType stopoverType = LocationType.STOPOVER;
-
-    @JsonCreator
-    public void setStopoverType(String stopoverType) {
-        this.stopoverType = LocationType.fromString(stopoverType);
-        if(this.stopoverType == null) {
-            this.stopoverType = LocationType.STOPOVER;
-        }
-    }
+    private LocationType stopoverType;
 }
