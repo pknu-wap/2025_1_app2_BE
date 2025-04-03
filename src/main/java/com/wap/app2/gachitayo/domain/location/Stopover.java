@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 
+
+
 @Builder
 @Entity
 @Getter
@@ -15,7 +17,8 @@ public class Stopover {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "location_id")
     private Location location;
 
     @Setter
@@ -26,5 +29,19 @@ public class Stopover {
     @Setter
     @Enumerated(EnumType.STRING)
     private LocationType stopoverType;
+
+    public boolean update(Location location, LocationType stopoverType) {
+        boolean isUpdated = false;
+        if(location != null && !this.location.equals(location)) {
+            this.location = location;
+            this.location.getStopovers().add(this);
+            isUpdated = true;
+        }
+        if(stopoverType != null && !this.stopoverType.equals(stopoverType)) {
+            this.stopoverType = stopoverType;
+            isUpdated = true;
+        }
+        return isUpdated;
+    }
 }
 

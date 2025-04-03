@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LocationDto {
-    private String name;
+    private String address;
     @JsonProperty("lat")
     private Double latitude;
     @JsonProperty("lng")

@@ -6,6 +6,7 @@ import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.repository.location.StopoverRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,5 +33,15 @@ public class StopoverService {
     public void setStopoverToParty(Stopover stopover, Party party) {
         stopover.setParty(party);
         stopoverRepository.save(stopover);
+    }
+
+    @Transactional
+    public ResponseEntity<?> updateStopover(Stopover stopover, Location location, LocationType stopoverType) {
+        if(!stopover.update(location, stopoverType)) {
+            return ResponseEntity.ok().body("no changed");
+        }
+
+        stopoverRepository.save(stopover);
+        return ResponseEntity.ok().body("updated stopover");
     }
 }
