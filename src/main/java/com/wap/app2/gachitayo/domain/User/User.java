@@ -12,24 +12,26 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "users")
 public class User {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 10)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 11, unique = true)
     private String phone;
 
     @Column(nullable = false)
     private int age;
 
+    @Lob
     @Column(name = "profile_image")
     private String profileImageUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 320, unique = true)
     private String email;
 
     @Column(nullable = false)
