@@ -84,20 +84,21 @@ public class PartyService {
     @Transactional
     public ResponseEntity<?> updateStopover(Long partyId, StopoverDto stopoverDto) {
         if(stopoverDto.getId() == null) {
-            return ResponseEntity.badRequest().body("missing stopover id");
+            return ResponseEntity.badRequest().body("missing target stopover id field in request body");
         }
 
-        Stopover stopoverEntity = stopoverRepository.findById(stopoverDto.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "stopover not found"));
+        Party partyEntity = partyRepository.findById(partyId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "party not found. please request again with existing party id"));
 
-        if(!stopoverEntity.getParty().getId().equals(partyId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("stopover id mismatch to party id");
+        Stopover stopoverEntity = partyEntity.getStopovers().stream()
+                .filter(stopover -> stopover.getId().equals(stopoverDto.getId()))
+                .findFirst().orElse(null);
+
+        if(stopoverEntity == null) {
+            return ResponseEntity.badRequest().body("cannot found target stopover with id: " + stopoverDto.getId());
         }
 
-        Location locationEntity = (stopoverDto.getLocation() != null)?
-                locationService.createOrGetLocation(stopoverDto.getLocation()) : null;
-
-        return stopoverService.updateStopover(stopoverEntity, locationEntity, stopoverDto.getStopoverType());
+        return stopoverService.updateStopover(stopoverEntity, stopoverDto.getLocation(), stopoverDto.getStopoverType());
     }
 
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
