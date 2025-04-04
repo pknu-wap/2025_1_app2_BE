@@ -37,8 +37,9 @@ public class StopoverService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateStopover(Stopover stopover, Location location, LocationType stopoverType) {
-        if(!stopover.update(location, stopoverType)) {
+    public ResponseEntity<?> updateStopover(Stopover stopover, LocationDto locationDto, LocationType stopoverType) {
+        Location locationEntity = (locationDto != null) ? locationService.createOrGetLocation(locationDto) : null;
+        if(!stopover.update(locationEntity, stopoverType)) {
             return ResponseEntity.ok().body("no changed");
         }
 
