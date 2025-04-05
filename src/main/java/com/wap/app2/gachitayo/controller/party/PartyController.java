@@ -2,6 +2,7 @@ package com.wap.app2.gachitayo.controller.party;
 
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
+import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.service.party.PartyService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,11 @@ public class PartyController {
     @PostMapping("/{id}")
     public ResponseEntity<?> addStopoverToParty(@PathVariable("id") Long id, @RequestBody StopoverDto stopoverDto) {
         return partyService.addStopoverToParty(id, stopoverDto);
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<?> searchPartyWithLocation(@RequestBody PartySearchRequestDto requestDto) {
+        return partyService.searchPartyWithDestinationLocation(requestDto);
     }
 
     @PatchMapping("/{id}")
