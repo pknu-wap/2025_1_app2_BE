@@ -1,12 +1,13 @@
 package com.wap.app2.gachitayo.domain.location;
 
 import com.wap.app2.gachitayo.Enum.LocationType;
+import com.wap.app2.gachitayo.domain.fare.Fare;
 import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
 import lombok.*;
 
-
-
+import java.util.List;
+import java.util.ArrayList;
 
 @Builder
 @Entity
@@ -25,6 +26,9 @@ public class Stopover {
     @ManyToOne
     @JoinColumn(name = "party_id")
     private Party party;
+
+    @OneToMany(mappedBy = "stopover", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Fare> fareList = new ArrayList<>();
 
     @Setter
     @Enumerated(EnumType.STRING)
