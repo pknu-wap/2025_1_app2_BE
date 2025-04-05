@@ -4,6 +4,7 @@ import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
+import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -99,6 +101,24 @@ public class PartyService {
         }
 
         return stopoverService.updateStopover(stopoverEntity, stopoverDto.getLocation(), stopoverDto.getStopoverType());
+    }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> searchPartyWithDestinationLocation(PartySearchRequestDto requestDto) {
+        List<Party> parties = partyRepository.findPartiesWithRadius(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius());
+        List<PartyResponseDto> responseDtos = new ArrayList<>();
+        for(Party party : parties) {
+            responseDtos.add(
+                    PartyResponseDto.builder()
+                            .id(party.getId())
+                            .stopovers(toStopoverDto(party))
+                            .radius(party.getAllowRadius())
+                            .maxPerson(party.getMaxPerson())
+                            .genderOption(party.getGenderOption())
+                            .build()
+            );
+        }
+        return ResponseEntity.ok(responseDtos);
     }
 
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
