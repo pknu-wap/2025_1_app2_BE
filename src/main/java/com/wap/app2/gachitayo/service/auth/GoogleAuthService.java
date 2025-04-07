@@ -23,8 +23,8 @@ import java.util.Collections;
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
-    @Value("{spring.google.clientId}")
-    private final String clientId;
+    @Value("${spring.google.clientId}")
+    private String clientId;
 
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
