@@ -21,7 +21,7 @@ public class GoogleAuthController {
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDto> userLogin(@RequestBody LoginRequestDto requestDto) {
-        return googleAuthService.getUserDetail(requestDto);
+        return googleAuthService.userLogin(requestDto);
     }
 
     @PostMapping("/register")
