@@ -28,7 +28,6 @@ public class GoogleAuthService {
 
     private final JWTUtil jwtUtil;
     private final UserRepository userRepository;
-    private final Long expiredMs = 12 * 1000L * 60L * 60L; //12시간
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
@@ -37,14 +36,14 @@ public class GoogleAuthService {
 
         User user = getUserByEmail(email);
 
-        if (user == null) {
-            return ResponseEntity.internalServerError().build();
-        }
+        if (user == null) return ResponseEntity.internalServerError().build();
 
-        String accessToken = jwtUtil.createToken(email, expiredMs);
+        String accessToken = jwtUtil.createAccessToken(email);
+        String refreshToken = jwtUtil.createRefreshToken();
+
         Token token = new Token(
                 accessToken,
-                accessToken
+                refreshToken
         );
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
@@ -54,18 +53,15 @@ public class GoogleAuthService {
         String idToken = requestDto.idToken();
         String _accessToken = requestDto.accessToken();
         String email = getUserEmail(idToken, _accessToken);
-        String[] _email = email.split("@");
 
-        if (_email.length != 2) return ResponseEntity.internalServerError().build();
+        if (email == null) return ResponseEntity.internalServerError().build();
 
-        if (!_email[1].equalsIgnoreCase("pukyong.ac.kr")) return ResponseEntity.internalServerError().build();
+        //구글 토큰을 검증해서 뒷부분만 확인하면 됨
+        if (!email.endsWith("pukyong.ac.kr")) return ResponseEntity.internalServerError().build();
 
         User existUser = getUserByEmail(email);
 
-        if (existUser == null) {
-            //에러 처리는 어떻게 할까요??
-            return ResponseEntity.internalServerError().build();
-        }
+        if (existUser != null) return ResponseEntity.internalServerError().build();
 
         User user = User.builder()
                 .name(requestDto.name())
@@ -77,10 +73,12 @@ public class GoogleAuthService {
 
         userRepository.save(user);
 
-        String accessToken = jwtUtil.createToken(email, expiredMs);
+        String accessToken = jwtUtil.createAccessToken(email);
+        String refreshToken = jwtUtil.createRefreshToken();
+
         Token token = new Token(
                 accessToken,
-                accessToken
+                refreshToken
         );
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
@@ -88,7 +86,7 @@ public class GoogleAuthService {
 
 
 
-    public String getUserEmail(String idTokenString, String _accessToken) {
+    public String getUserEmail(String _idToken, String _accessToken) {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
@@ -96,17 +94,13 @@ public class GoogleAuthService {
                 .build();
 
         try {
-            GoogleIdToken idToken = verifier.verify(idTokenString);
-            if (idToken != null) {
-                GoogleIdToken.Payload payload = idToken.getPayload();
-                return payload.getEmail();
-            } else {
-                //에러 처리 핸들링... how to..
-                throw new IllegalArgumentException("토큰 검증 실패");
-            }
+            GoogleIdToken idToken = verifier.verify(_idToken);
 
-        } catch (GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            return payload.getEmail();
+
+        } catch (IllegalArgumentException | GeneralSecurityException | IOException e) {
+            return null;
         }
     }
 
