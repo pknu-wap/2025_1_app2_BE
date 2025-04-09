@@ -10,12 +10,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-public class JWTUtil {
+public class JwtTokenProvider {
     private final SecretKey secretKey;
-    private final Long AccessTokenExpiredMs = 1000L * 60L * 60L; //1시간
+    private final Long AccessTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; //1시간 -> 리프레쉬 토큰 구현전 1주일로 변경
     private final Long RefreshTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; //1주일
 
-    public JWTUtil(@Value("${spring.jwt.secret}") String secret) {
+    public JwtTokenProvider(@Value("${spring.jwt.secret}") String secret) {
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
