@@ -39,4 +39,7 @@ public class Party {
     @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE)
+    private List<PartyMember> partyMemberList = new ArrayList<>();
 }
