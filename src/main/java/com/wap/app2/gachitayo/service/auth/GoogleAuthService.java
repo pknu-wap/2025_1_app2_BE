@@ -8,8 +8,9 @@ import com.wap.app2.gachitayo.domain.User.User;
 import com.wap.app2.gachitayo.domain.auth.Token;
 import com.wap.app2.gachitayo.dto.request.LoginRequestDto;
 import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;
+import com.wap.app2.gachitayo.dto.request.ReissueReqeuestDto;
 import com.wap.app2.gachitayo.dto.response.TokenResponseDto;
-import com.wap.app2.gachitayo.jwt.JWTUtil;
+import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.auth.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,7 @@ public class GoogleAuthService {
     @Value("${spring.google.clientId}")
     private String clientId;
 
-    private final JWTUtil jwtUtil;
+    private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
@@ -38,8 +39,8 @@ public class GoogleAuthService {
 
         if (user == null) return ResponseEntity.internalServerError().build();
 
-        String accessToken = jwtUtil.createAccessToken(email);
-        String refreshToken = jwtUtil.createRefreshToken();
+        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken();
 
         Token token = new Token(
                 accessToken,
@@ -73,8 +74,8 @@ public class GoogleAuthService {
 
         userRepository.save(user);
 
-        String accessToken = jwtUtil.createAccessToken(email);
-        String refreshToken = jwtUtil.createRefreshToken();
+        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken();
 
         Token token = new Token(
                 accessToken,
@@ -84,7 +85,23 @@ public class GoogleAuthService {
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }
 
+    public ResponseEntity<TokenResponseDto> reissueToken(ReissueReqeuestDto requestDto) {
+        //db에서 해당 refreshToken 가진사람 가져오기
+        //repository.get~~();
+        //레디스 사용시 만료 되었는지 확인할 필요없음
 
+        boolean isValid = jwtTokenProvider.isValid(requestDto.refreshToken());
+
+        //Redis 사용시 불필요함
+        if (!isValid) return ResponseEntity.internalServerError().build();
+
+        //유저를 디비에서 유저를 가져오는게 아니라 모름...
+        Token token = new Token(
+            jwtTokenProvider.createAccessToken("test@pukyong.ac.kr"),
+            jwtTokenProvider.createRefreshToken()
+        );
+        return ResponseEntity.ok(TokenResponseDto.from(token));
+    }
 
     public String getUserEmail(String _idToken, String _accessToken) {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
