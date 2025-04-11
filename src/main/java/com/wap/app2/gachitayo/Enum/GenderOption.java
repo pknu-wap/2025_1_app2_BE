@@ -2,16 +2,16 @@ package com.wap.app2.gachitayo.Enum;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 
+import java.util.Arrays;
+
 public enum GenderOption {
-    MIXED, ONLY_MAN, ONLY_WOMAN;
+    MIXED, ONLY_MALE, ONLY_FEMALE;
 
     @JsonCreator
     public static GenderOption fromStringGenderOption(String gender) {
-        for (GenderOption genderOption : GenderOption.values()) {
-            if (genderOption.name().equalsIgnoreCase(gender)) {
-                return genderOption;
-            }
-        }
-        return null;
+        return Arrays.stream(GenderOption.values())
+                .filter(g -> g.name().equalsIgnoreCase(gender))
+                .findAny()
+                .orElse(null);
     }
 }
