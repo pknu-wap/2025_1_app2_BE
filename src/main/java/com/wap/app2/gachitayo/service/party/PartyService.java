@@ -132,9 +132,11 @@ public class PartyService {
                 .collect(Collectors.toList());
     }
 
-    private PartyCreateResponseDto toResponseDto(Party partyEntity, Stopover startStopover, Stopover destStopover) {
+    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
+                .hostName(member.getName())
+                .hostEmail(member.getEmail())
                 .startLocation(stopoverMapper.toDto(startStopover))
                 .destination(stopoverMapper.toDto(destStopover))
                 .maxPerson(partyEntity.getMaxPerson())
