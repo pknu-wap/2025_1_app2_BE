@@ -11,7 +11,7 @@ import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;
 import com.wap.app2.gachitayo.dto.request.ReissueReqeuestDto;
 import com.wap.app2.gachitayo.dto.response.TokenResponseDto;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
-import com.wap.app2.gachitayo.repository.auth.UserRepository;
+import com.wap.app2.gachitayo.repository.auth.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +28,7 @@ public class GoogleAuthService {
     private String clientId;
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
@@ -73,7 +73,7 @@ public class GoogleAuthService {
                 .profileImageUrl(requestDto.profileImageUrl())
                 .build();
 
-        userRepository.save(member);
+        memberRepository.save(member);
 
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
@@ -123,6 +123,6 @@ public class GoogleAuthService {
     }
 
     public Member getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return memberRepository.findByEmail(email).orElse(null);
     }
 }

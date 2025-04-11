@@ -2,7 +2,7 @@ package com.wap.app2.gachitayo.config;
 
 import com.wap.app2.gachitayo.jwt.JWTFilter;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
-import com.wap.app2.gachitayo.repository.auth.UserRepository;
+import com.wap.app2.gachitayo.repository.auth.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -34,7 +34,7 @@ public class SecurityConfig {
                 auth -> auth
                         .requestMatchers("/api/oauth/**").permitAll()
                         .anyRequest().authenticated()
-        ).addFilterBefore(new JWTFilter(jwtTokenProvider, userRepository), UsernamePasswordAuthenticationFilter.class);
+        ).addFilterBefore(new JWTFilter(jwtTokenProvider, memberRepository), UsernamePasswordAuthenticationFilter.class);
 
         http.sessionManagement((session)
                 -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
