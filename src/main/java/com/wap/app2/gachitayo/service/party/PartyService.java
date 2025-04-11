@@ -1,5 +1,8 @@
 package com.wap.app2.gachitayo.service.party;
 
+import com.wap.app2.gachitayo.Enum.Gender;
+import com.wap.app2.gachitayo.Enum.GenderOption;
+import com.wap.app2.gachitayo.Enum.RequestGenderOption;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
@@ -119,6 +122,19 @@ public class PartyService {
             );
         }
         return ResponseEntity.ok(responseDtos);
+    }
+
+    private GenderOption matchGenderOption(RequestGenderOption requestGenderOption, Member member) {
+        GenderOption genderOption = (requestGenderOption.equals(RequestGenderOption.ONLY))? null : GenderOption.MIXED;
+        if(genderOption == null) {
+            Gender gender = member.getGender();
+            if(gender.equals(Gender.MALE)) {
+                genderOption = GenderOption.ONLY_MALE;
+            } else {
+                genderOption = GenderOption.ONLY_FEMALE;
+            }
+        }
+        return genderOption;
     }
 
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
