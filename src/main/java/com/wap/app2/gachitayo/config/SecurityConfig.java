@@ -1,5 +1,6 @@
 package com.wap.app2.gachitayo.config;
 
+import com.wap.app2.gachitayo.jwt.JWTExceptionFilter;
 import com.wap.app2.gachitayo.jwt.JWTFilter;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.auth.MemberRepository;
@@ -34,7 +35,9 @@ public class SecurityConfig {
                 auth -> auth
                         .requestMatchers("/api/oauth/**").permitAll()
                         .anyRequest().authenticated()
-        ).addFilterBefore(new JWTFilter(jwtTokenProvider, memberRepository), UsernamePasswordAuthenticationFilter.class);
+        )
+        .addFilterBefore(new JWTFilter(jwtTokenProvider, memberRepository), UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(new JWTExceptionFilter(), JWTFilter.class);
 
         http.sessionManagement((session)
                 -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
