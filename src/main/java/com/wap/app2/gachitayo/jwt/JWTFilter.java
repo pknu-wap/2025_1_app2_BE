@@ -2,7 +2,9 @@ package com.wap.app2.gachitayo.jwt;
 
 import com.wap.app2.gachitayo.domain.Member.Member;
 import com.wap.app2.gachitayo.domain.Member.MemberDetails;
-import com.wap.app2.gachitayo.repository.auth.UserRepository;
+import com.wap.app2.gachitayo.error.exception.ErrorCode;
+import com.wap.app2.gachitayo.error.exception.TagogayoException;
+import com.wap.app2.gachitayo.repository.auth.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +23,12 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return request.getRequestURI().startsWith("/api/oauth/");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -29,21 +36,19 @@ public class JWTFilter extends OncePerRequestFilter {
 
         if (authorization == null || !authorization.startsWith("Bearer")) {
             log.info("Token Null");
-            filterChain.doFilter(request, response);
-            return;
+            throw new TagogayoException(ErrorCode.INVALID_JWT);
         }
 
         String token = authorization.split(" ")[1];
 
         if (!jwtTokenProvider.isValid(token)) {
             log.info("Token not valid");
-            filterChain.doFilter(request, response);
-            return;
+            throw new TagogayoException(ErrorCode.INVALID_JWT);
         }
 
         String email = jwtTokenProvider.getEmailByToken(token);
 
-        Member member = userRepository.findByEmail(email).orElse(null);
+        Member member = memberRepository.findByEmail(email).orElse(null);
 
         if (member == null) {
             filterChain.doFilter(request, response);

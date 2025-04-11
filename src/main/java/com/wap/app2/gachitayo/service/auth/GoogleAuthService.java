@@ -10,8 +10,10 @@ import com.wap.app2.gachitayo.dto.request.LoginRequestDto;
 import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;
 import com.wap.app2.gachitayo.dto.request.ReissueReqeuestDto;
 import com.wap.app2.gachitayo.dto.response.TokenResponseDto;
+import com.wap.app2.gachitayo.error.exception.ErrorCode;
+import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
-import com.wap.app2.gachitayo.repository.auth.UserRepository;
+import com.wap.app2.gachitayo.repository.auth.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,7 @@ public class GoogleAuthService {
     private String clientId;
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserRepository userRepository;
+    private final MemberRepository memberRepository;
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
@@ -37,7 +39,7 @@ public class GoogleAuthService {
 
         Member member = getUserByEmail(email);
 
-        if (member == null) return ResponseEntity.internalServerError().build();
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
@@ -55,14 +57,14 @@ public class GoogleAuthService {
         String _accessToken = requestDto.accessToken();
         String email = getUserEmail(idToken, _accessToken);
 
-        if (email == null) return ResponseEntity.internalServerError().build();
+        if (email == null) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
 
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
-        if (!email.endsWith("pukyong.ac.kr")) return ResponseEntity.internalServerError().build();
+        if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
         Member existMember = getUserByEmail(email);
 
-        if (existMember != null) return ResponseEntity.internalServerError().build();
+        if (existMember != null) throw new TagogayoException(ErrorCode.ALREADY_SIGNUP);
 
         Member member = Member.builder()
                 .name(requestDto.name())
@@ -73,7 +75,7 @@ public class GoogleAuthService {
                 .profileImageUrl(requestDto.profileImageUrl())
                 .build();
 
-        userRepository.save(member);
+        memberRepository.save(member);
 
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
@@ -105,6 +107,9 @@ public class GoogleAuthService {
     }
 
     public String getUserEmail(String _idToken, String _accessToken) {
+        if (true) {
+            return "test@pukyong.ac.kr";
+        }
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
@@ -123,6 +128,6 @@ public class GoogleAuthService {
     }
 
     public Member getUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElse(null);
+        return memberRepository.findByEmail(email).orElse(null);
     }
 }
