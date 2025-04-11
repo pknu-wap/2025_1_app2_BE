@@ -28,10 +28,9 @@ public class Stopover {
     @JoinColumn(name = "party_id")
     private Party party;
 
-    @OneToMany(mappedBy = "stopover", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Fare> fareList = new ArrayList<>();
-
     @Setter
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Fare fare;
     @Setter
     @NotNull
     @Enumerated(EnumType.STRING)
