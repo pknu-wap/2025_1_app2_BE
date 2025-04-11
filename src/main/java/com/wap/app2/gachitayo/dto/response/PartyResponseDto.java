@@ -11,12 +11,16 @@ import java.util.List;
 public record PartyResponseDto(
         @JsonProperty("party_id")
         Long id,
+        @JsonProperty("party_members")
+        List<PartyMemberResponseDto> members,
         @JsonProperty("party_stopovers")
         List<StopoverDto> stopovers,
         @JsonProperty("party_radius")
         Double radius,
-        @JsonProperty("party_max_person")
-        Integer maxPerson,
+        @JsonProperty("party_max_people")
+        Integer maxPeople,
+        @JsonProperty("party_current_people")
+        Integer currentPeople,
         @JsonProperty("party_option")
         GenderOption genderOption
 ) {
