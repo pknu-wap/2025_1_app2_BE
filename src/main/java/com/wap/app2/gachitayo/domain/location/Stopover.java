@@ -4,6 +4,7 @@ import com.wap.app2.gachitayo.Enum.LocationType;
 import com.wap.app2.gachitayo.domain.fare.Fare;
 import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -31,8 +32,11 @@ public class Stopover {
     private List<Fare> fareList = new ArrayList<>();
 
     @Setter
+    @Setter
+    @NotNull
     @Enumerated(EnumType.STRING)
-    private LocationType stopoverType;
+    @Builder.Default
+    private LocationType stopoverType = LocationType.STOPOVER;
 
     public boolean update(Location location, LocationType stopoverType) {
         boolean isUpdated = false;
