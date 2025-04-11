@@ -7,10 +7,10 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = EnumValidator.class)
+@Constraint(validatedBy = LocationTypeValidator.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidEnum {
+public @interface ValidLocationType {
     String message() default "Invalid stopover for enum";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
