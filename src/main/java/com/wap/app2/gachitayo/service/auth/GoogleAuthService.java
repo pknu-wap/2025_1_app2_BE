@@ -69,6 +69,7 @@ public class GoogleAuthService {
                 .phone(requestDto.phone())
                 .age(requestDto.age())
                 .email(email)
+                .gender(requestDto.gender())
                 .profileImageUrl(requestDto.profileImageUrl())
                 .build();
 
