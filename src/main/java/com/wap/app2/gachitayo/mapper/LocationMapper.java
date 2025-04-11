@@ -10,9 +10,15 @@ import org.mapstruct.factory.Mappers;
 public interface LocationMapper {
     LocationMapper INSTANCE = Mappers.getMapper(LocationMapper.class);
 
-    @Mapping(source = "name", target = "locationName")
+    @Mapping(target = "id", ignore = true)
     Location toEntity(LocationDto dto);
 
-    @Mapping(source = "locationName", target = "name")
     LocationDto toDto(Location entity);
+
+    default Location toEntityWithExisting(LocationDto dto, Location existingEntity) {
+        existingEntity.setAddress(dto.getAddress());
+        existingEntity.setLatitude(dto.getLatitude());
+        existingEntity.setLongitude(dto.getLongitude());
+        return existingEntity;
+    }
 }
