@@ -2,12 +2,16 @@ package com.wap.app2.gachitayo.domain.party;
 
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
 import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -26,6 +30,10 @@ public class PartyMember {
     @ManyToOne
     @JoinColumn(name = "party_id")
     private Party party;
+
+    @OneToMany(mappedBy = "partyMember", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @Builder.Default
+    private List<PaymentStatus> paymentStatusList = new ArrayList<>();
 
     @NotNull
     @Enumerated(EnumType.STRING)
