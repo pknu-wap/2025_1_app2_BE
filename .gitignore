@@ -39,4 +39,3 @@ out/
 ### ETC ###
 application-*.properties
 **/generated
-schema.sql
