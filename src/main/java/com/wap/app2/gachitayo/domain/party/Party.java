@@ -3,6 +3,7 @@ package com.wap.app2.gachitayo.domain.party;
 import com.wap.app2.gachitayo.Enum.GenderOption;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,18 +21,25 @@ public class Party {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull
     @Column(nullable = false, name="max_person")
     @Builder.Default
-    private Integer maxPerson = 3;
+    private int maxPerson = 3;
 
+    @NotNull
     @Column(nullable = false, name="radius")
     @Builder.Default
-    private double allowRadius = 1.0;
+    private double allowRadius = 0.0; // m 단위, 0이면 같은 목적지
 
+    @NotNull
     @Enumerated(EnumType.STRING)
-    private GenderOption genderOption;
+    @Builder.Default
+    private GenderOption genderOption = GenderOption.MIXED;
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE, orphanRemoval = true)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
+
+    @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE)
+    private List<PartyMember> partyMemberList = new ArrayList<>();
 }
