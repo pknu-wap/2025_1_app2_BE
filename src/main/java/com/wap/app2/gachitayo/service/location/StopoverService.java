@@ -2,6 +2,7 @@ package com.wap.app2.gachitayo.service.location;
 
 import com.wap.app2.gachitayo.Enum.LocationType;
 import com.wap.app2.gachitayo.domain.fare.Fare;
+import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
@@ -33,6 +34,12 @@ public class StopoverService {
         Fare fare = fareService.createDefaultFare(newStopover);
         newStopover.setFare(fare);
         return stopoverRepository.save(newStopover);
+    }
+
+    @Transactional
+    public void addPaymentStatus(Stopover stopover, PaymentStatus paymentStatus) {
+        stopover.getPaymentStatusList().add(paymentStatus);
+        stopoverRepository.save(stopover);
     }
 
     @Transactional
