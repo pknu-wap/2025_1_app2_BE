@@ -3,6 +3,10 @@ package com.wap.app2.gachitayo.domain.location;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 @Builder
 @Entity
 @Getter
@@ -12,15 +16,31 @@ public class Location {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String locationName;
+    @Setter
+    private String address;
 
+    @Setter
     @Column(nullable = false)
     private double latitude;
 
+    @Setter
     @Column(nullable = false)
     private double longitude;
 
-    @Setter
-    @OneToOne(fetch = FetchType.LAZY)
-    private Stopover stopover;
+    @OneToMany(mappedBy = "location")
+    @Builder.Default
+    private List<Stopover> stopovers = new ArrayList<>();
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Location location = (Location) o;
+        return Objects.equals(id, location.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
