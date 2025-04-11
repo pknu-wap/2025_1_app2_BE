@@ -2,6 +2,7 @@ package com.wap.app2.gachitayo.domain.Member;
 
 import com.wap.app2.gachitayo.Enum.Gender;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,20 +15,23 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
 public class Member {
-
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 10)
-    private String name;
+    @NotNull
+    @Column(length = 10)
+    @Builder.Default
+    private String name = "익명";
 
-    @Column(nullable = false, length = 11, unique = true)
-    private String phone;
+    @NotNull
+    @Column(length = 20, unique = true)
+    @Builder.Default
+    private String phone = "010-0000-0000";
 
-    @Column(nullable = false)
-    private int age;
+    @NotNull
+    @Builder.Default
+    private int age = 20;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -37,10 +41,12 @@ public class Member {
     @Column(name = "profile_image")
     private String profileImageUrl;
 
-    @Column(nullable = false, length = 320, unique = true)
-    private String email;
+    @NotNull
+    @Column(length = 320, unique = true)
+    @Builder.Default
+    private String email = "anonymous@pukyong.ac.kr";
 
-    @Column(nullable = false)
+    @NotNull
     @Builder.Default
     private LocalDateTime created_at = LocalDateTime.now();
 
