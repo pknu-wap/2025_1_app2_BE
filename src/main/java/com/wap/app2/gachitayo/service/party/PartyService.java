@@ -31,7 +31,7 @@ public class PartyService {
     private final StopoverMapper stopoverMapper;
 
     @Transactional
-    public ResponseEntity<PartyCreateResponseDto> createParty(PartyCreateRequestDto requestDto) {
+    public ResponseEntity<PartyCreateResponseDto> createParty(String email, PartyCreateRequestDto requestDto) {
         Stopover startStopover = stopoverService.createStopover(requestDto.getStartLocation().getLocation(), requestDto.getStartLocation().getStopoverType());
         Stopover destStopover = stopoverService.createStopover(requestDto.getDestination().getLocation(), requestDto.getDestination().getStopoverType());
 
