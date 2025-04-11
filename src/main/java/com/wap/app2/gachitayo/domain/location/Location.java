@@ -1,6 +1,7 @@
 package com.wap.app2.gachitayo.domain.location;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -17,14 +18,16 @@ public class Location {
     private Long id;
 
     @Setter
-    private String address;
+    @NotNull
+    @Builder.Default
+    private String address = "";
 
     @Setter
-    @Column(nullable = false)
+    @NotNull
     private double latitude;
 
     @Setter
-    @Column(nullable = false)
+    @NotNull
     private double longitude;
 
     @OneToMany(mappedBy = "location")
