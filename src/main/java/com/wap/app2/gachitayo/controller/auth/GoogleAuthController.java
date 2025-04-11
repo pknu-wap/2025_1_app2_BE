@@ -2,6 +2,7 @@ package com.wap.app2.gachitayo.controller.auth;
 
 import com.wap.app2.gachitayo.dto.request.LoginRequestDto;
 import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;
+import com.wap.app2.gachitayo.dto.request.ReissueReqeuestDto;
 import com.wap.app2.gachitayo.dto.response.TokenResponseDto;
 import com.wap.app2.gachitayo.service.auth.GoogleAuthService;
 import lombok.RequiredArgsConstructor;
@@ -27,5 +28,10 @@ public class GoogleAuthController {
     @PostMapping("/register")
     public ResponseEntity<TokenResponseDto> userRegister(@RequestBody RegisterRequestDto requestDto) {
         return googleAuthService.registerUser(requestDto);
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity<TokenResponseDto> reissue(@RequestBody ReissueReqeuestDto requestDto) {
+        return googleAuthService.reissueToken(requestDto);
     }
 }
