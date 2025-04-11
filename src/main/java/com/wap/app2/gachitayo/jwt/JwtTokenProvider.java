@@ -1,6 +1,10 @@
 package com.wap.app2.gachitayo.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,30 +13,54 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
     private final SecretKey secretKey;
-    private final Long AccessTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; //1시간 -> 리프레쉬 토큰 구현전 1주일로 변경
-    private final Long RefreshTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; //1주일
+    private final Long AccessTokenExpiredMs = 999* 1000L * 60L * 60L; // 1시간
+    private final Long RefreshTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; // 1주일
 
     public JwtTokenProvider(@Value("${spring.jwt.secret}") String secret) {
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
     }
 
-    public Boolean isExpired(String token) {
-        Date expiration = Jwts.parser()
+    public boolean isValid(String token) {
+        try {
+            Date expiration = Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration();
+
+            return expiration.after(new Date()); //유효한 토큰
+        } catch (SecurityException | MalformedJwtException e) {
+            // 서명 오류, 잘못된 토큰 형식
+            log.info("잘못된 JWT 서명입니다.");
+        } catch (ExpiredJwtException e) {
+            // 토큰 만료
+            log.info("만료된 JWT 토큰입니다.");
+        } catch (UnsupportedJwtException e) {
+            // 지원하지 않는 토큰
+            log.info("지원하지 않는 JWT 토큰입니다.");
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+        return false;
+    }
+
+    public String getEmailByToken(String token) {
+        return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload()
-                .getExpiration();
-
-        return expiration.before(new Date()); // 만료일이 지금보다 전이면 만료됨
+                .getSubject();
     }
 
     public String createAccessToken(String email) {
         return Jwts.builder()
-            .claim("email", email)
+            .subject(email)
             .issuedAt(new Date(System.currentTimeMillis()))
             .expiration(new Date(System.currentTimeMillis() + AccessTokenExpiredMs))
             .signWith(this.secretKey)
