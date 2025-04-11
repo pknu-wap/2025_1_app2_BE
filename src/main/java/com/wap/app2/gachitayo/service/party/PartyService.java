@@ -1,14 +1,25 @@
 package com.wap.app2.gachitayo.service.party;
 
+import com.wap.app2.gachitayo.Enum.Gender;
+import com.wap.app2.gachitayo.Enum.GenderOption;
+import com.wap.app2.gachitayo.Enum.PartyMemberRole;
+import com.wap.app2.gachitayo.Enum.RequestGenderOption;
+import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
+import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
+import com.wap.app2.gachitayo.error.exception.ErrorCode;
+import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
+import com.wap.app2.gachitayo.service.auth.GoogleAuthService;
+import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,24 +40,39 @@ public class PartyService {
     private final PartyRepository partyRepository;
     private final StopoverService stopoverService;
     private final StopoverMapper stopoverMapper;
+    private final GoogleAuthService googleAuthService;
+    private final PartyMemberService partyMemberService;
+    private final PaymentStatusService paymentStatusService;
 
     @Transactional
-    public ResponseEntity<PartyCreateResponseDto> createParty(PartyCreateRequestDto requestDto) {
+    public ResponseEntity<PartyCreateResponseDto> createParty(String email, PartyCreateRequestDto requestDto) {
+        log.info("\n=====파티 생성 시도=====");
+        Member hostMember = googleAuthService.getUserByEmail(email);
+        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
         Stopover startStopover = stopoverService.createStopover(requestDto.getStartLocation().getLocation(), requestDto.getStartLocation().getStopoverType());
         Stopover destStopover = stopoverService.createStopover(requestDto.getDestination().getLocation(), requestDto.getDestination().getStopoverType());
+
+        GenderOption genderOption = matchGenderOption(requestDto.getGenderOption(), hostMember);
 
         Party partyEntity = Party.builder()
                 .stopovers(List.of(startStopover, destStopover))
                 .maxPerson(requestDto.getMaxPerson())
                 .allowRadius(requestDto.getRadius())
-                .genderOption(requestDto.getGenderOption())
+                .genderOption(genderOption)
                 .build();
 
-        stopoverService.setStopoverToParty(startStopover, partyEntity);
-        stopoverService.setStopoverToParty(destStopover, partyEntity);
+        startStopover.setParty(partyEntity);
+        destStopover.setParty(partyEntity);
+
+        PartyMember partyMember = partyMemberService.connectMemberWithParty(partyEntity, hostMember, PartyMemberRole.HOST);
+
+        PaymentStatus paymentStatus = paymentStatusService.connectPartyMemberWithStopover(partyMember, destStopover);
+        stopoverService.addPaymentStatus(destStopover, paymentStatus);
         partyRepository.save(partyEntity);
 
-        return ResponseEntity.ok(toResponseDto(partyEntity, startStopover, destStopover));
+        log.info("\n=====파티 생성 성공=====");
+        return ResponseEntity.ok(toResponseDto(partyEntity, hostMember, startStopover, destStopover));
     }
 
     @Transactional(readOnly = true)
@@ -121,6 +147,19 @@ public class PartyService {
         return ResponseEntity.ok(responseDtos);
     }
 
+    private GenderOption matchGenderOption(RequestGenderOption requestGenderOption, Member member) {
+        GenderOption genderOption = (requestGenderOption.equals(RequestGenderOption.ONLY))? null : GenderOption.MIXED;
+        if(genderOption == null) {
+            Gender gender = member.getGender();
+            if(gender.equals(Gender.MALE)) {
+                genderOption = GenderOption.ONLY_MALE;
+            } else {
+                genderOption = GenderOption.ONLY_FEMALE;
+            }
+        }
+        return genderOption;
+    }
+
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
         log.error("Party not found with id: {}", partyId);
         return ResponseEntity.notFound().build();
@@ -132,9 +171,11 @@ public class PartyService {
                 .collect(Collectors.toList());
     }
 
-    private PartyCreateResponseDto toResponseDto(Party partyEntity, Stopover startStopover, Stopover destStopover) {
+    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
+                .hostName(member.getName())
+                .hostEmail(member.getEmail())
                 .startLocation(stopoverMapper.toDto(startStopover))
                 .destination(stopoverMapper.toDto(destStopover))
                 .maxPerson(partyEntity.getMaxPerson())
