@@ -1,10 +1,12 @@
 package com.wap.app2.gachitayo.domain.User;
 
+import com.wap.app2.gachitayo.Enum.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +28,10 @@ public class User {
 
     @Column(nullable = false)
     private int age;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Gender gender = Gender.MALE;
 
     @Lob
     @Column(name = "profile_image")
