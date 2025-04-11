@@ -2,10 +2,14 @@ package com.wap.app2.gachitayo.domain.location;
 
 import com.wap.app2.gachitayo.Enum.LocationType;
 import com.wap.app2.gachitayo.domain.fare.Fare;
+import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Builder
@@ -29,6 +33,10 @@ public class Stopover {
     @Setter
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Fare fare;
+
+    @OneToMany(mappedBy = "stopover")
+    @Builder.Default
+    private List<PaymentStatus> paymentStatusList = new ArrayList<>();
 
     @Setter
     @NotNull
