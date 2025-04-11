@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.domain.User;
+package com.wap.app2.gachitayo.domain.Member;
 
 import com.wap.app2.gachitayo.Enum.Gender;
 import jakarta.persistence.*;
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
-public class User {
+public class Member {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

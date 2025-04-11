@@ -4,7 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.wap.app2.gachitayo.domain.User.User;
+import com.wap.app2.gachitayo.domain.Member.Member;
 import com.wap.app2.gachitayo.domain.auth.Token;
 import com.wap.app2.gachitayo.dto.request.LoginRequestDto;
 import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;
@@ -35,9 +35,9 @@ public class GoogleAuthService {
         String _accessToken = requestDto.accessToken();
         String email = getUserEmail(idToken, _accessToken);
 
-        User user = getUserByEmail(email);
+        Member member = getUserByEmail(email);
 
-        if (user == null) return ResponseEntity.internalServerError().build();
+        if (member == null) return ResponseEntity.internalServerError().build();
 
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
@@ -60,11 +60,11 @@ public class GoogleAuthService {
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
         if (!email.endsWith("pukyong.ac.kr")) return ResponseEntity.internalServerError().build();
 
-        User existUser = getUserByEmail(email);
+        Member existMember = getUserByEmail(email);
 
-        if (existUser != null) return ResponseEntity.internalServerError().build();
+        if (existMember != null) return ResponseEntity.internalServerError().build();
 
-        User user = User.builder()
+        Member member = Member.builder()
                 .name(requestDto.name())
                 .phone(requestDto.phone())
                 .age(requestDto.age())
@@ -72,7 +72,7 @@ public class GoogleAuthService {
                 .profileImageUrl(requestDto.profileImageUrl())
                 .build();
 
-        userRepository.save(user);
+        userRepository.save(member);
 
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
@@ -121,7 +121,7 @@ public class GoogleAuthService {
         }
     }
 
-    public User getUserByEmail(String email) {
+    public Member getUserByEmail(String email) {
         return userRepository.findByEmail(email).orElse(null);
     }
 }

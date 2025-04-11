@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.jwt;
 
-import com.wap.app2.gachitayo.domain.User.User;
-import com.wap.app2.gachitayo.domain.User.UserMemberDetails;
+import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.Member.MemberDetails;
 import com.wap.app2.gachitayo.repository.auth.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -43,16 +43,16 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String email = jwtTokenProvider.getEmailByToken(token);
 
-        User user = userRepository.findByEmail(email).orElse(null);
+        Member member = userRepository.findByEmail(email).orElse(null);
 
-        if (user == null) {
+        if (member == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        UserMemberDetails userMemberDetails = new UserMemberDetails(user);
+        MemberDetails memberDetails = new MemberDetails(member);
 
-        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(userMemberDetails, null, new ArrayList<>());
+        UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(memberDetails, null, new ArrayList<>());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
         filterChain.doFilter(request, response);

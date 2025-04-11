@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.domain.User;
+package com.wap.app2.gachitayo.domain.Member;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -6,15 +6,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-public class UserMemberDetails implements UserDetails {
-    private final User user;
+public class MemberDetails implements UserDetails {
+    private final Member member;
 
-    public UserMemberDetails(User user) {
-        this.user = user;
+    public MemberDetails(Member member) {
+        this.member = member;
     }
 
-    public User getUser() {
-        return user;
+    public Member getUser() {
+        return member;
     }
 
     @Override
@@ -33,6 +33,6 @@ public class UserMemberDetails implements UserDetails {
      */
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return member.getEmail();
     }
 }
