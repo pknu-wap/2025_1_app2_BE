@@ -1,6 +1,7 @@
 package com.wap.app2.gachitayo.domain.Member;
 
 import com.wap.app2.gachitayo.Enum.Gender;
+import com.wap.app2.gachitayo.domain.party.PartyMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -50,4 +54,6 @@ public class Member {
     @Builder.Default
     private LocalDateTime created_at = LocalDateTime.now();
 
+    @OneToMany(mappedBy = "member")
+    private List<PartyMember> partyMemberList = new ArrayList<>();
 }
