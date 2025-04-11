@@ -55,5 +55,6 @@ public class Member {
     private LocalDateTime created_at = LocalDateTime.now();
 
     @OneToMany(mappedBy = "member")
+    @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
 }
