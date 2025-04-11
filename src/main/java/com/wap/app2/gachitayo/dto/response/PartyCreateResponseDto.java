@@ -9,6 +9,7 @@ import lombok.Builder;
 public record PartyCreateResponseDto(
         @JsonProperty("party_id")
         Long id,
+        Long hostId,
         @JsonProperty("party_start")
         StopoverDto startLocation,
         @JsonProperty("party_destination")
