@@ -6,11 +6,11 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.util.Arrays;
 
-public class EnumValidator implements ConstraintValidator<ValidEnum, LocationType> {
+public class LocationTypeValidator implements ConstraintValidator<ValidLocationType, LocationType> {
     private Class<? extends Enum<?>> enumClass;
 
     @Override
-    public void initialize(ValidEnum constraintAnnotation) {
+    public void initialize(ValidLocationType constraintAnnotation) {
         this.enumClass = constraintAnnotation.enumClass();
     }
 
