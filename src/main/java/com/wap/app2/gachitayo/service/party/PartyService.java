@@ -130,7 +130,7 @@ public class PartyService {
     }
 
     @Transactional(readOnly = true)
-    public ResponseEntity<?> searchPartyWithDestinationLocation(PartySearchRequestDto requestDto) {
+    public ResponseEntity<?> searchPartiesWithDestinationLocation(String email, PartySearchRequestDto requestDto) {
         List<Party> parties = partyRepository.findPartiesWithRadius(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius());
         List<PartyResponseDto> responseDtos = new ArrayList<>();
         for(Party party : parties) {
