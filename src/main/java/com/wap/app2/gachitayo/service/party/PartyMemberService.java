@@ -22,4 +22,9 @@ public class PartyMemberService {
                 .memberRole(role)
                 .build());
     }
+
+    @Transactional(readOnly = true)
+    public boolean isInParty(Party party, Member member) {
+        return partyMemberRepository.existsByPartyAndMember(party, member);
+    }
 }
