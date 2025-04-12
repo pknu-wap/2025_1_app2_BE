@@ -1,28 +1,33 @@
 package com.wap.app2.gachitayo.domain.fare;
 
 import com.wap.app2.gachitayo.domain.location.Stopover;
+import com.wap.app2.gachitayo.domain.party.PartyMember;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Fare {
+@Table(name = "payment_status")
+public class PaymentStatus {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @Builder.Default
-    private int baseFigure = 0;
+    @ManyToOne
+    @JoinColumn(name = "party_member_id")
+    private PartyMember partyMember;
+
+    @NotNull
+    @ManyToOne
+    @Setter
+    @JoinColumn(name = "stopover_id")
+    private Stopover stopover;
 
     @NotNull
     @Builder.Default
-    private int finalFigure = 0;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    private Stopover stopover;
+    private boolean isPaid = false;
 }
