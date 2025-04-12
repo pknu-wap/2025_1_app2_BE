@@ -82,7 +82,7 @@ public class PartyService {
                         .id(party.getId())
                         .stopovers(toStopoverDto(party))
                         .radius(party.getAllowRadius())
-                        .maxPerson(party.getMaxPerson())
+                        .maxPeople(party.getMaxPerson())
                         .genderOption(party.getGenderOption())
                         .build()))
                 .orElseGet(() -> notFoundPartyResponseEntity(partyId));
@@ -132,19 +132,34 @@ public class PartyService {
     @Transactional(readOnly = true)
     public ResponseEntity<?> searchPartiesWithDestinationLocation(String email, PartySearchRequestDto requestDto) {
         List<Party> parties = partyRepository.findPartiesWithRadius(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius());
+        Member member = googleAuthService.getUserByEmail(email);
+        return ResponseEntity.ok(toPartyResponseDtoList(parties, member));
+    }
+
+    private List<PartyResponseDto> toPartyResponseDtoList(List<Party> parties, Member member) {
         List<PartyResponseDto> responseDtos = new ArrayList<>();
         for(Party party : parties) {
-            responseDtos.add(
-                    PartyResponseDto.builder()
-                            .id(party.getId())
-                            .stopovers(toStopoverDto(party))
-                            .radius(party.getAllowRadius())
-                            .maxPerson(party.getMaxPerson())
-                            .genderOption(party.getGenderOption())
-                            .build()
-            );
+            int currentPeople = party.getPartyMemberList().size();
+            String memberGender = member.getGender().name();
+            String partyOption = party.getGenderOption().name().substring(5);
+            if(currentPeople != party.getMaxPerson()
+                && !partyMemberService.isInParty(party, member)
+                && (party.getGenderOption().equals(GenderOption.MIXED) || memberGender.equals(partyOption))
+            ) {
+                responseDtos.add(
+                        PartyResponseDto.builder()
+                                .id(party.getId())
+                                .members(partyMemberService.getPartyMemberResponseDtoList(party))
+                                .stopovers(toStopoverDto(party))
+                                .radius(party.getAllowRadius())
+                                .maxPeople(party.getMaxPerson())
+                                .currentPeople(currentPeople)
+                                .genderOption(party.getGenderOption())
+                                .build()
+                );
+            }
         }
-        return ResponseEntity.ok(responseDtos);
+        return responseDtos;
     }
 
     private GenderOption matchGenderOption(RequestGenderOption requestGenderOption, Member member) {
