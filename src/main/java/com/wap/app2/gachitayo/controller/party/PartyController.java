@@ -35,6 +35,11 @@ public class PartyController {
         return partyService.addStopoverToParty(id, stopoverDto);
     }
 
+    @PostMapping("/{id}/attend")
+    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        return partyService.attendParty(memberDetails.getUsername(), id);
+    }
+
     @PostMapping("/search")
     public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
         return partyService.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
