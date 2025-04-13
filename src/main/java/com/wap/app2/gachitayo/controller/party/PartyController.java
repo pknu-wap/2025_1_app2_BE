@@ -36,8 +36,8 @@ public class PartyController {
     }
 
     @PostMapping("/search")
-    public ResponseEntity<?> searchPartyWithLocation(@RequestBody PartySearchRequestDto requestDto) {
-        return partyService.searchPartyWithDestinationLocation(requestDto);
+    public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
+        return partyService.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
     }
 
     @PatchMapping("/{id}")
