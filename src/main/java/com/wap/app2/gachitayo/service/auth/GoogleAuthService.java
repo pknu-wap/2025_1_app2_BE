@@ -14,6 +14,7 @@ import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.auth.MemberRepository;
+import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -31,13 +32,14 @@ public class GoogleAuthService {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
+    private final MemberService memberService;
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
         String _accessToken = requestDto.accessToken();
         String email = getUserEmail(idToken, _accessToken);
 
-        Member member = getUserByEmail(email);
+        Member member = memberService.getUserByEmail(email);
 
         if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
@@ -62,7 +64,7 @@ public class GoogleAuthService {
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
         if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
-        Member existMember = getUserByEmail(email);
+        Member existMember = memberService.getUserByEmail(email);
 
         if (existMember != null) throw new TagogayoException(ErrorCode.ALREADY_SIGNUP);
 
@@ -107,9 +109,6 @@ public class GoogleAuthService {
     }
 
     public String getUserEmail(String _idToken, String _accessToken) {
-        if (true) {
-            return "test@pukyong.ac.kr";
-        }
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
@@ -125,9 +124,5 @@ public class GoogleAuthService {
         } catch (IllegalArgumentException | GeneralSecurityException | IOException e) {
             return null;
         }
-    }
-
-    public Member getUserByEmail(String email) {
-        return memberRepository.findByEmail(email).orElse(null);
     }
 }
