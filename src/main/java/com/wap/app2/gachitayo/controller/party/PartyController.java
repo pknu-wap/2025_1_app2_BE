@@ -20,9 +20,6 @@ public class PartyController {
 
     @PostMapping
     public ResponseEntity<?> createParty(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartyCreateRequestDto requestDto) {
-        if(memberDetails == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Member details cannot be null");
-        }
         return partyService.createParty(memberDetails.getUsername(), requestDto);
     }
 

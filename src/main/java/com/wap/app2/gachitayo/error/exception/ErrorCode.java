@@ -14,7 +14,7 @@ public enum ErrorCode {
     ALREADY_SIGNUP(400, "MEMBER-400-1", "이미 회원가입된 회원입니다."),
     INVALID_REQUEST(400, "MEMBER-400-2", "잘못된 요청입니다."),
     NOT_MATCH_EMAIL(400, "MEMBER-400-3", "이메일 주소가 잘못 되었습니다."),
-    MEMBER_NOT_LOGIN(403, "USER-403-1", "로그인하지 않았습니다."),
+    MEMBER_NOT_LOGIN(403, "USER-403-1", "로그인되어 있지 않습니다."),
     MEMBER_NOT_FOUND(404, "MEMBER-404-1", "회원을 조회할 수 없습니다."),
 
     //JWT
