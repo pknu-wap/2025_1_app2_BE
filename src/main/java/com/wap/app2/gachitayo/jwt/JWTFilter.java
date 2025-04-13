@@ -51,8 +51,9 @@ public class JWTFilter extends OncePerRequestFilter {
         Member member = memberRepository.findByEmail(email).orElse(null);
 
         if (member == null) {
-            filterChain.doFilter(request, response);
-            return;
+            //검증받은 토큰이 존재하는데 유저가 존재하지 않을 수 없어...
+            log.error("member not found");
+            throw new TagogayoException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
         MemberDetails memberDetails = new MemberDetails(member);
