@@ -31,6 +31,9 @@ public enum ErrorCode {
     NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-4", "해당 파티의 유저가 아닙니다."),
     NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY_403-5", "해당 파티의 방장이 아닙니다."),
 
+    //Stopover
+    STOPOVER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "STOPOVER-404-1", "존재하지 않는 경유지입니다."),
+
     INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error");
 
     private final int status;

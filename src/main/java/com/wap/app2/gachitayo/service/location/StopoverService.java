@@ -5,12 +5,10 @@ import com.wap.app2.gachitayo.domain.fare.Fare;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
-import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.dto.datadto.LocationDto;
 import com.wap.app2.gachitayo.repository.location.StopoverRepository;
 import com.wap.app2.gachitayo.service.fare.FareService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,19 +41,13 @@ public class StopoverService {
     }
 
     @Transactional
-    public void setStopoverToParty(Stopover stopover, Party party) {
-        stopover.setParty(party);
-        stopoverRepository.save(stopover);
-    }
-
-    @Transactional
-    public ResponseEntity<?> updateStopover(Stopover stopover, LocationDto locationDto, LocationType stopoverType) {
+    public boolean updateStopover(Stopover stopover, LocationDto locationDto, LocationType stopoverType) {
         Location locationEntity = (locationDto != null) ? locationService.createOrGetLocation(locationDto) : null;
         if(!stopover.update(locationEntity, stopoverType)) {
-            return ResponseEntity.ok().body("no changed");
+            return false;
         }
 
         stopoverRepository.save(stopover);
-        return ResponseEntity.ok().body("updated stopover");
+        return true;
     }
 }

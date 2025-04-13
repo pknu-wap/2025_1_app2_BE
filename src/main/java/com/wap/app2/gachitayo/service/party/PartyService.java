@@ -11,6 +11,7 @@ import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
+import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
@@ -23,11 +24,9 @@ import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -164,23 +163,39 @@ public class PartyService {
     }
 
     @Transactional
-    public ResponseEntity<?> updateStopover(Long partyId, StopoverDto stopoverDto) {
-        if(stopoverDto.getId() == null) {
-            return ResponseEntity.badRequest().body("missing target stopover id field in request body");
-        }
-
+    public ResponseEntity<?> updateStopover(String email, Long partyId, StopoverUpdateDto updateDto) {
         Party partyEntity = partyRepository.findById(partyId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "party not found. please request again with existing party id"));
+                .orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
+
+        Member hostMember = googleAuthService.getUserByEmail(email);
+        if(hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, hostMember);
+        if(host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        if(!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
 
         Stopover stopoverEntity = partyEntity.getStopovers().stream()
-                .filter(stopover -> stopover.getId().equals(stopoverDto.getId()))
+                .filter(stopover -> stopover.getId().equals(updateDto.getStopoverId()))
                 .findFirst().orElse(null);
 
-        if(stopoverEntity == null) {
-            return ResponseEntity.badRequest().body("cannot found target stopover with id: " + stopoverDto.getId());
-        }
+        if(stopoverEntity == null) throw new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND);
 
-        return stopoverService.updateStopover(stopoverEntity, stopoverDto.getLocation(), stopoverDto.getStopoverType());
+        boolean isUpdatedPayementStatus = false;
+        if(updateDto.getMemberEmail() != null) {
+            Member member = googleAuthService.getUserByEmail(updateDto.getMemberEmail());
+            if(member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+            PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, member);
+            if(partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+            isUpdatedPayementStatus = paymentStatusService.updateStopover(partyMember, stopoverEntity);
+        }
+        boolean isUpdatedStopover = stopoverService.updateStopover(stopoverEntity, updateDto.getLocation(), updateDto.getStopoverType());
+        if(isUpdatedStopover || isUpdatedPayementStatus) {
+            log.info("\n=====수정 사항 성공적으로 반영=====");
+            return ResponseEntity.ok().body(Map.of(
+               "stopover", stopoverMapper.toDto(stopoverEntity)
+            ));
+        }
+        log.info("\n=====수정 사항 없음=====");
+        return ResponseEntity.noContent().build();
     }
 
     @Transactional(readOnly = true)
