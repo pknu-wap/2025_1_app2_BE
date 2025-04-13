@@ -4,6 +4,7 @@ import com.wap.app2.gachitayo.domain.Member.MemberDetails;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
+import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.service.party.PartyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,8 +32,8 @@ public class PartyController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<?> addStopoverToParty(@PathVariable("id") Long id, @RequestBody StopoverDto stopoverDto) {
-        return partyService.addStopoverToParty(id, stopoverDto);
+    public ResponseEntity<?> addStopoverToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverAddRequestDto requestDto) {
+        return partyService.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
     }
 
     @PostMapping("/{id}/attend")
