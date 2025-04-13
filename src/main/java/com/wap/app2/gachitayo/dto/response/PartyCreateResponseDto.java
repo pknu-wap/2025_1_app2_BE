@@ -19,8 +19,8 @@ public record PartyCreateResponseDto(
         StopoverDto destination,
         @JsonProperty("party_radius")
         Double radius,
-        @JsonProperty("party_max_person")
-        Integer maxPerson,
+        @JsonProperty("party_max_people")
+        Integer maxPeople,
         @JsonProperty("party_option")
         GenderOption genderOption
 ) {

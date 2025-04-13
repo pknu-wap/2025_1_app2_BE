@@ -24,7 +24,7 @@ public class Party {
     @NotNull
     @Column(nullable = false, name="max_person")
     @Builder.Default
-    private int maxPerson = 3;
+    private int maxPeople = 3;
 
     @NotNull
     @Column(nullable = false, name="radius")
