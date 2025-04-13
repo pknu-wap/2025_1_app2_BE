@@ -3,6 +3,7 @@ package com.wap.app2.gachitayo.error.exception;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -21,6 +22,12 @@ public enum ErrorCode {
     EXPIRED_JWT(403, "TOKEN-403-2", "액세스 토큰이 만료되었습니다."),
     REFRESH_TOKEN_EXPIRED(403, "TOKEN-403-3", "리프레시 토큰이 만료되었습니다."),
     TOKEN_MISSING(403, "TOKEN-403-4", "토큰이 없습니다."),
+
+    //Party
+    PARTY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "PARTY-404-1", "존재하지 않는 파티입니다."),
+    EXCEED_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "인원이 가득 찬 파티입니다."),
+    ALREADY_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "이미 속한 파티입니다."),
+    NOT_MATCH_GENDER_OPTION(HttpStatus.CONFLICT.value(), "PARTY-409-3", "파티 성별 옵션에 맞지 않는 유저입니다."),
 
     INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error");
 
