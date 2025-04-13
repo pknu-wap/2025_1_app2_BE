@@ -31,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,7 +58,7 @@ public class PartyService {
 
         Party partyEntity = Party.builder()
                 .stopovers(List.of(startStopover, destStopover))
-                .maxPerson(requestDto.getMaxPerson())
+                .maxPeople(requestDto.getMaxPerson())
                 .allowRadius(requestDto.getRadius())
                 .genderOption(genderOption)
                 .build();
@@ -82,10 +83,34 @@ public class PartyService {
                         .id(party.getId())
                         .stopovers(toStopoverDto(party))
                         .radius(party.getAllowRadius())
-                        .maxPeople(party.getMaxPerson())
+                        .maxPeople(party.getMaxPeople())
                         .genderOption(party.getGenderOption())
                         .build()))
                 .orElseGet(() -> notFoundPartyResponseEntity(partyId));
+    }
+
+    @Transactional
+    public ResponseEntity<?> attendParty(String email, Long partyId) {
+        log.info("\n=====유저가 파티 참가 시도=====");
+        Party party = partyRepository.findById(partyId).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
+        Member member = googleAuthService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+        if(party.getPartyMemberList().size() == party.getMaxPeople()) throw new TagogayoException(ErrorCode.EXCEED_PARTY_MEMBER);
+        if(partyMemberService.isInParty(party, member)) throw new TagogayoException(ErrorCode.ALREADY_PARTY_MEMBER);
+
+        String memberGender = member.getGender().name();
+        String partyOption = party.getGenderOption().name().substring(5);
+        if(!partyOption.equalsIgnoreCase(memberGender)) throw new TagogayoException(ErrorCode.NOT_MATCH_GENDER_OPTION);
+
+        PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
+        log.info("\n=====참가 성공=====");
+        // DTO 만들기 귀찮아서 Map 으로 응답합니다.
+        Map<String, Object> responseMap = Map.of(
+                "message", "파티 참가 요청이 완료되었습니다.",
+                "party_id", party.getId(),
+                "party_member_id", participant.getId()
+        );
+        return ResponseEntity.ok().body(responseMap);
     }
 
     @Transactional
@@ -142,7 +167,7 @@ public class PartyService {
             int currentPeople = party.getPartyMemberList().size();
             String memberGender = member.getGender().name();
             String partyOption = party.getGenderOption().name().substring(5);
-            if(currentPeople != party.getMaxPerson()
+            if(currentPeople != party.getMaxPeople()
                 && !partyMemberService.isInParty(party, member)
                 && (party.getGenderOption().equals(GenderOption.MIXED) || memberGender.equals(partyOption))
             ) {
@@ -152,7 +177,7 @@ public class PartyService {
                                 .members(partyMemberService.getPartyMemberResponseDtoList(party))
                                 .stopovers(toStopoverDto(party))
                                 .radius(party.getAllowRadius())
-                                .maxPeople(party.getMaxPerson())
+                                .maxPeople(party.getMaxPeople())
                                 .currentPeople(currentPeople)
                                 .genderOption(party.getGenderOption())
                                 .build()
@@ -193,7 +218,7 @@ public class PartyService {
                 .hostEmail(member.getEmail())
                 .startLocation(stopoverMapper.toDto(startStopover))
                 .destination(stopoverMapper.toDto(destStopover))
-                .maxPerson(partyEntity.getMaxPerson())
+                .maxPeople(partyEntity.getMaxPeople())
                 .radius(partyEntity.getAllowRadius())
                 .genderOption(partyEntity.getGenderOption())
                 .build();
