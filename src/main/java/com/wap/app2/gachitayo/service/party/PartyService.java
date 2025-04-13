@@ -135,11 +135,13 @@ public class PartyService {
         Stopover stopoverEntity = partyEntity.getStopovers().stream()
                 .filter(s -> existStopoverWithLocation(s, locationMapper.toEntity(requestDto.getLocation()))).findFirst().orElse(null);
 
+        boolean isCreated = false;
         if(stopoverEntity == null) {
             log.info("새로운 하차 지점 생성");
             stopoverEntity = stopoverService.createStopover(requestDto.getLocation(), LocationType.STOPOVER);
             stopoverEntity.setParty(partyEntity);
             partyEntity.getStopovers().add(stopoverEntity);
+            isCreated = true;
         }
 
         PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, participant);
@@ -147,8 +149,18 @@ public class PartyService {
         stopoverService.addPaymentStatus(stopoverEntity, paymentStatus);
         partyRepository.save(partyEntity);
 
+
         log.info("\n=====하차 지점 추가 성공=====");
-        return ResponseEntity.noContent().build();
+        if(isCreated) {
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "새로운 하차 지점 생성",
+                    "stopover", stopoverMapper.toDto(stopoverEntity)
+            ));
+        }
+        return ResponseEntity.ok().body(Map.of(
+                "message", "기존 하차 지점 사용",
+                "stopover", stopoverMapper.toDto(stopoverEntity)
+        ));
     }
 
     @Transactional
