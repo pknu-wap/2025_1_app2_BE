@@ -24,11 +24,9 @@ import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -169,6 +167,12 @@ public class PartyService {
         Party partyEntity = partyRepository.findById(partyId)
                 .orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
 
+        Member hostMember = googleAuthService.getUserByEmail(email);
+        if(hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, hostMember);
+        if(host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        if(!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+
         Stopover stopoverEntity = partyEntity.getStopovers().stream()
                 .filter(stopover -> stopover.getId().equals(updateDto.getStopoverId()))
                 .findFirst().orElse(null);
@@ -177,7 +181,7 @@ public class PartyService {
 
         boolean isUpdatedPayementStatus = false;
         if(updateDto.getMemberEmail() != null) {
-            Member member = googleAuthService.getUserByEmail(email);
+            Member member = googleAuthService.getUserByEmail(updateDto.getMemberEmail());
             if(member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
             PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, member);
             if(partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
