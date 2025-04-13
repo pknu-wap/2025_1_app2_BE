@@ -1,6 +1,5 @@
 package com.wap.app2.gachitayo.service.party;
 
-import com.google.gson.Gson;
 import com.wap.app2.gachitayo.Enum.Gender;
 import com.wap.app2.gachitayo.Enum.GenderOption;
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -106,14 +104,13 @@ public class PartyService {
 
         PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
         log.info("\n=====참가 성공=====");
-        // DTO 만들기 귀찮아서 Gson 썼습니다.
-        Map<String, Object> responseMap = new HashMap<>();
-        responseMap.put("message", "파티 참가 요청이 완료되었습니다.");
-        responseMap.put("party_id", party.getId());
-        responseMap.put("party_member_id", participant.getId());
-        Gson gson = new Gson();
-        String json = gson.toJson(responseMap);
-        return ResponseEntity.ok().body(json);
+        // DTO 만들기 귀찮아서 Map 으로 응답합니다.
+        Map<String, Object> responseMap = Map.of(
+                "message", "파티 참가 요청이 완료되었습니다.",
+                "party_id", party.getId(),
+                "party_member_id", participant.getId()
+        );
+        return ResponseEntity.ok().body(responseMap);
     }
 
     @Transactional
