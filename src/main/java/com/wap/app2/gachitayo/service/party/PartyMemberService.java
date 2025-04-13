@@ -32,6 +32,11 @@ public class PartyMemberService {
     }
 
     @Transactional(readOnly = true)
+    public PartyMember getPartyMemberByPartyAndMember(Party party, Member member) {
+        return partyMemberRepository.findByPartyAndMember(party, member);
+    }
+
+    @Transactional(readOnly = true)
     public List<PartyMemberResponseDto> getPartyMemberResponseDtoList(Party party) {
         List<PartyMember> partyMemberList = partyMemberRepository.findAllByParty(party);
         return partyMemberList.stream().map(pm ->
