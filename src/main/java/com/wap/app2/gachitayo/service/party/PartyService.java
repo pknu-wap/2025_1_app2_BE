@@ -22,6 +22,7 @@ import com.wap.app2.gachitayo.repository.party.PartyRepository;
 import com.wap.app2.gachitayo.service.auth.GoogleAuthService;
 import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
+import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class PartyService {
     private final PartyRepository partyRepository;
     private final StopoverService stopoverService;
     private final StopoverMapper stopoverMapper;
-    private final GoogleAuthService googleAuthService;
+    private final MemberService memberService;
     private final PartyMemberService partyMemberService;
     private final PaymentStatusService paymentStatusService;
     private final LocationMapper locationMapper;
@@ -48,7 +49,7 @@ public class PartyService {
     @Transactional
     public ResponseEntity<PartyCreateResponseDto> createParty(String email, PartyCreateRequestDto requestDto) {
         log.info("\n=====파티 생성 시도=====");
-        Member hostMember = googleAuthService.getUserByEmail(email);
+        Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         Stopover startStopover = stopoverService.createStopover(requestDto.getStartLocation().getLocation(), requestDto.getStartLocation().getStopoverType());
@@ -93,7 +94,7 @@ public class PartyService {
     public ResponseEntity<?> attendParty(String email, Long partyId) {
         log.info("\n=====유저가 파티 참가 시도=====");
         Party party = partyRepository.findById(partyId).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
-        Member member = googleAuthService.getUserByEmail(email);
+        Member member = memberService.getUserByEmail(email);
         if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
         if(party.getPartyMemberList().size() == party.getMaxPeople()) throw new TagogayoException(ErrorCode.EXCEED_PARTY_MEMBER);
         if(partyMemberService.isInParty(party, member)) throw new TagogayoException(ErrorCode.ALREADY_PARTY_MEMBER);
@@ -119,7 +120,7 @@ public class PartyService {
         Party partyEntity = partyRepository.findById(partyId).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
 
         // HOST 검증
-        Member hostMember = googleAuthService.getUserByEmail(email);
+        Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
         PartyMember partyHost = partyEntity.getPartyMemberList().stream()
                 .filter(pm -> hostMember.getId().equals(pm.getMember().getId())).findFirst()
@@ -127,7 +128,7 @@ public class PartyService {
         if(!partyHost.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
 
         // 연결 시킬 유저 검증
-        Member participant = googleAuthService.getUserByEmail(requestDto.getMemberEmail());
+        Member participant = memberService.getUserByEmail(requestDto.getMemberEmail());
         if(participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
         if(!partyMemberService.isInParty(partyEntity, participant)) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
@@ -167,7 +168,7 @@ public class PartyService {
         Party partyEntity = partyRepository.findById(partyId)
                 .orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
 
-        Member hostMember = googleAuthService.getUserByEmail(email);
+        Member hostMember = memberService.getUserByEmail(email);
         if(hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
         PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, hostMember);
         if(host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
@@ -181,7 +182,7 @@ public class PartyService {
 
         boolean isUpdatedPayementStatus = false;
         if(updateDto.getMemberEmail() != null) {
-            Member member = googleAuthService.getUserByEmail(updateDto.getMemberEmail());
+            Member member = memberService.getUserByEmail(updateDto.getMemberEmail());
             if(member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
             PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, member);
             if(partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
@@ -201,7 +202,7 @@ public class PartyService {
     @Transactional(readOnly = true)
     public ResponseEntity<?> searchPartiesWithDestinationLocation(String email, PartySearchRequestDto requestDto) {
         List<Party> parties = partyRepository.findPartiesWithRadius(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius());
-        Member member = googleAuthService.getUserByEmail(email);
+        Member member = memberService.getUserByEmail(email);
         return ResponseEntity.ok(toPartyResponseDtoList(parties, member));
     }
 
