@@ -1,21 +1,21 @@
 package com.wap.app2.gachitayo.service.party;
 
-import com.wap.app2.gachitayo.Enum.Gender;
-import com.wap.app2.gachitayo.Enum.GenderOption;
-import com.wap.app2.gachitayo.Enum.PartyMemberRole;
-import com.wap.app2.gachitayo.Enum.RequestGenderOption;
+import com.wap.app2.gachitayo.Enum.*;
 import com.wap.app2.gachitayo.domain.Member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
+import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
+import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
+import com.wap.app2.gachitayo.mapper.LocationMapper;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
 import com.wap.app2.gachitayo.service.auth.GoogleAuthService;
@@ -44,6 +44,7 @@ public class PartyService {
     private final GoogleAuthService googleAuthService;
     private final PartyMemberService partyMemberService;
     private final PaymentStatusService paymentStatusService;
+    private final LocationMapper locationMapper;
 
     @Transactional
     public ResponseEntity<PartyCreateResponseDto> createParty(String email, PartyCreateRequestDto requestDto) {
@@ -114,24 +115,52 @@ public class PartyService {
     }
 
     @Transactional
-    public ResponseEntity<?> addStopoverToParty(Long partyId, StopoverDto requestDto) {
-        Party partyEntity = partyRepository.findById(partyId).orElse(null);
-        if(partyEntity == null) {
-            return notFoundPartyResponseEntity(partyId);
-        }
+    public ResponseEntity<?> addStopoverToParty(String email, Long partyId, StopoverAddRequestDto requestDto) {
+        log.info("\n=====파티 내 하차 지점 추가 시도=====");
+        Party partyEntity = partyRepository.findById(partyId).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
 
-        Stopover stopoverEntity = stopoverService.createStopover(requestDto.getLocation(), requestDto.getStopoverType());
+        // HOST 검증
+        Member hostMember = googleAuthService.getUserByEmail(email);
+        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+        PartyMember partyHost = partyEntity.getPartyMemberList().stream()
+                .filter(pm -> hostMember.getId().equals(pm.getMember().getId())).findFirst()
+                .orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
+        if(!partyHost.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
 
-        boolean isExist = partyEntity.getStopovers().stream()
-                .anyMatch(stopover -> stopover.getLocation().equals(stopoverEntity.getLocation()));
+        // 연결 시킬 유저 검증
+        Member participant = googleAuthService.getUserByEmail(requestDto.getMemberEmail());
+        if(participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+        if(!partyMemberService.isInParty(partyEntity, participant)) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
-        if(!isExist) {
-            stopoverService.setStopoverToParty(stopoverEntity, partyEntity);
+        Stopover stopoverEntity = partyEntity.getStopovers().stream()
+                .filter(s -> existStopoverWithLocation(s, locationMapper.toEntity(requestDto.getLocation()))).findFirst().orElse(null);
+
+        boolean isCreated = false;
+        if(stopoverEntity == null) {
+            log.info("새로운 하차 지점 생성");
+            stopoverEntity = stopoverService.createStopover(requestDto.getLocation(), LocationType.STOPOVER);
+            stopoverEntity.setParty(partyEntity);
             partyEntity.getStopovers().add(stopoverEntity);
-            partyRepository.save(partyEntity);
+            isCreated = true;
         }
 
-        return ResponseEntity.noContent().build();
+        PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(partyEntity, participant);
+        PaymentStatus paymentStatus = paymentStatusService.connectPartyMemberWithStopover(partyMember, stopoverEntity);
+        stopoverService.addPaymentStatus(stopoverEntity, paymentStatus);
+        partyRepository.save(partyEntity);
+
+
+        log.info("\n=====하차 지점 추가 성공=====");
+        if(isCreated) {
+            return ResponseEntity.ok().body(Map.of(
+                    "message", "새로운 하차 지점 생성",
+                    "stopover", stopoverMapper.toDto(stopoverEntity)
+            ));
+        }
+        return ResponseEntity.ok().body(Map.of(
+                "message", "기존 하차 지점 사용",
+                "stopover", stopoverMapper.toDto(stopoverEntity)
+        ));
     }
 
     @Transactional
@@ -198,6 +227,12 @@ public class PartyService {
             }
         }
         return genderOption;
+    }
+
+    private boolean existStopoverWithLocation(Stopover stopover, Location location) {
+        return stopover.getLocation().getAddress().equalsIgnoreCase(location.getAddress())
+                && stopover.getLocation().getLatitude() == location.getLatitude()
+                && stopover.getLocation().getLongitude() == location.getLongitude();
     }
 
     private ResponseEntity<PartyResponseDto> notFoundPartyResponseEntity(Long partyId) {
