@@ -28,6 +28,8 @@ public enum ErrorCode {
     EXCEED_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "인원이 가득 찬 파티입니다."),
     ALREADY_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "이미 속한 파티입니다."),
     NOT_MATCH_GENDER_OPTION(HttpStatus.CONFLICT.value(), "PARTY-409-3", "파티 성별 옵션에 맞지 않는 유저입니다."),
+    NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-4", "해당 파티의 유저가 아닙니다."),
+    NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY_403-5", "해당 파티의 방장이 아닙니다."),
 
     INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error");
 
