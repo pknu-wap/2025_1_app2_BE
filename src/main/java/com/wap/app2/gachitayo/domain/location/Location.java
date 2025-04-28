@@ -43,4 +43,10 @@ public class Location {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    public boolean isSameLocation(Location other) {
+        return this.address.equalsIgnoreCase(other.address)
+                && Double.compare(this.latitude, other.latitude) == 0
+                && Double.compare(this.longitude, other.longitude) == 0;
+    }
 }
