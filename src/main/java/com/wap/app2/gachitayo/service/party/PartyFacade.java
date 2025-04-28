@@ -7,9 +7,11 @@ import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
+import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
+import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
@@ -195,6 +197,44 @@ public class PartyFacade {
         log.info("\n===== 수정 사항 없음 =====");
         return ResponseEntity.noContent().build();
     }
+
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> searchPartiesWithDestinationLocation(String email, PartySearchRequestDto requestDto) {
+        log.info("\n===== 위치 기반 파티 검색 시도 =====");
+
+        // 1. 현재 사용자 조회
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        // 2. 반경 내 파티 조회
+        List<Party> parties = partyService.findPartiesWithinRadius(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius());
+
+        // 3. 필터링 (인원수, 성별옵션, 참가 여부)
+        List<PartyResponseDto> partyDtos = parties.stream()
+                .filter(party -> {
+                    int currentPeople = party.getPartyMemberList().size();
+                    String memberGender = member.getGender().name();
+                    String partyOption = party.getGenderOption().name().substring(5);
+
+                    return currentPeople != party.getMaxPeople()
+                            && !partyMemberService.isInParty(party, member)
+                            && (party.getGenderOption().equals(GenderOption.MIXED) || memberGender.equalsIgnoreCase(partyOption));
+                })
+                .map(party -> PartyResponseDto.builder()
+                        .id(party.getId())
+                        .members(partyMemberService.getPartyMemberResponseDtoList(party))
+                        .stopovers(party.getStopovers().stream().map(stopoverMapper::toDto).toList())
+                        .radius(party.getAllowRadius())
+                        .maxPeople(party.getMaxPeople())
+                        .currentPeople(party.getPartyMemberList().size())
+                        .genderOption(party.getGenderOption())
+                        .build()
+                )
+                .toList();
+
+        return ResponseEntity.ok(partyDtos);
+    }
+
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
         if (genderOption == GenderOption.MIXED) return;

@@ -41,11 +41,11 @@ public class PartyController {
 
     @PostMapping("/search")
     public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
-        return partyService2.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
+        return partyFacade.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateStopover(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverUpdateDto updateDto) {
-        return partyService2.updateStopover(memberDetails.getUsername(), id, updateDto);
+        return partyFacade.updateStopover(memberDetails.getUsername(), id, updateDto);
     }
 }
