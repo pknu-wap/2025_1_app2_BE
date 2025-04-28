@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/party")
 @RequiredArgsConstructor
 public class PartyController {
-    private final PartyService2 partyService2;
+    private final PartyService2 partyService2; // 곧 제거.
     private final PartyFacade partyFacade;
 
     @PostMapping
@@ -24,6 +24,7 @@ public class PartyController {
         return partyFacade.createParty(memberDetails.getUsername(), requestDto);
     }
 
+    // 순수 TEST 용
     @GetMapping("/{id}")
     public ResponseEntity<?> getParty(@PathVariable("id") Long id) {
         return partyService2.getPartyInformationById(id);

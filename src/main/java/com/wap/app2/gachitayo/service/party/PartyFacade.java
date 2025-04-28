@@ -71,19 +71,6 @@ public class PartyFacade {
         return ResponseEntity.ok().body(toResponseDto(party, host, start, dest));
     }
 
-    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
-        return PartyCreateResponseDto.builder()
-                .id(partyEntity.getId())
-                .hostName(member.getName())
-                .hostEmail(member.getEmail())
-                .startLocation(stopoverMapper.toDto(startStopover))
-                .destination(stopoverMapper.toDto(destStopover))
-                .maxPeople(partyEntity.getMaxPeople())
-                .radius(partyEntity.getAllowRadius())
-                .genderOption(partyEntity.getGenderOption())
-                .build();
-    }
-
     public ResponseEntity<?> attendParty(String email, Long partyId) {
         // 1. Party 조회
         Party party = partyService.findPartyById(partyId);
@@ -105,11 +92,11 @@ public class PartyFacade {
         PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
 
         // 5. Map 으로 간단히 응답
+        // 응답에 현재 유저 목록 보여주도록 수정해야 함.
         return ResponseEntity.ok(Map.of(
                 "message", "파티 참가 요청이 완료되었습니다.",
                 "party_id", party.getId(),
-                "party_member_id", participant.getId(),
-                "party_members", party.getPartyMemberList()
+                "party_member_id", participant.getId()
         ));
     }
 
@@ -143,10 +130,8 @@ public class PartyFacade {
         stopoverService.addPaymentStatus(stopover, paymentStatus);
 
         log.info("\n===== 하차 지점 추가 성공 =====");
-
-        boolean isNewStopover = stopover.getId() == null;
+        
         return ResponseEntity.ok(Map.of(
-                "message", isNewStopover ? "새로운 하차 지점 생성" : "기존 하차 지점 사용",
                 "stopover", stopoverMapper.toDto(stopover)
         ));
     }
@@ -186,7 +171,7 @@ public class PartyFacade {
             isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
         }
 
-        // 6. 결과 반환
+        // 6. 결과 반환 - 응답에 경유지 + 내리는 유저 정보 포함하도록 수정해야 함.
         if (isUpdatedStopover || isUpdatedPaymentStatus) {
             log.info("\n===== 수정 사항 성공 반영 =====");
             return ResponseEntity.ok(Map.of(
@@ -235,6 +220,18 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
+    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
+        return PartyCreateResponseDto.builder()
+                .id(partyEntity.getId())
+                .hostName(member.getName())
+                .hostEmail(member.getEmail())
+                .startLocation(stopoverMapper.toDto(startStopover))
+                .destination(stopoverMapper.toDto(destStopover))
+                .maxPeople(partyEntity.getMaxPeople())
+                .radius(partyEntity.getAllowRadius())
+                .genderOption(partyEntity.getGenderOption())
+                .build();
+    }
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
         if (genderOption == GenderOption.MIXED) return;
