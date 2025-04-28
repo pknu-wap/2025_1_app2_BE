@@ -5,6 +5,7 @@ import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
+import com.wap.app2.gachitayo.service.party.PartyFacade;
 import com.wap.app2.gachitayo.service.party.PartyService2;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PartyController {
     private final PartyService2 partyService2;
+    private final PartyFacade partyFacade;
 
     @PostMapping
     public ResponseEntity<?> createParty(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartyCreateRequestDto requestDto) {
-        return partyService2.createParty(memberDetails.getUsername(), requestDto);
+        return partyFacade.createParty(memberDetails.getUsername(), requestDto);
     }
 
     @GetMapping("/{id}")
