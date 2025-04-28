@@ -5,9 +5,8 @@ import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
-import com.wap.app2.gachitayo.service.party.PartyService;
+import com.wap.app2.gachitayo.service.party.PartyService2;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -16,35 +15,35 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/party")
 @RequiredArgsConstructor
 public class PartyController {
-    private final PartyService partyService;
+    private final PartyService2 partyService2;
 
     @PostMapping
     public ResponseEntity<?> createParty(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartyCreateRequestDto requestDto) {
-        return partyService.createParty(memberDetails.getUsername(), requestDto);
+        return partyService2.createParty(memberDetails.getUsername(), requestDto);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getParty(@PathVariable("id") Long id) {
-        return partyService.getPartyInformationById(id);
+        return partyService2.getPartyInformationById(id);
     }
 
     @PostMapping("/{id}")
     public ResponseEntity<?> addStopoverToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverAddRequestDto requestDto) {
-        return partyService.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
+        return partyService2.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
     }
 
     @PostMapping("/{id}/attend")
     public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        return partyService.attendParty(memberDetails.getUsername(), id);
+        return partyService2.attendParty(memberDetails.getUsername(), id);
     }
 
     @PostMapping("/search")
     public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
-        return partyService.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
+        return partyService2.searchPartiesWithDestinationLocation(memberDetails.getUsername(), requestDto);
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateStopover(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverUpdateDto updateDto) {
-        return partyService.updateStopover(memberDetails.getUsername(), id, updateDto);
+        return partyService2.updateStopover(memberDetails.getUsername(), id, updateDto);
     }
 }

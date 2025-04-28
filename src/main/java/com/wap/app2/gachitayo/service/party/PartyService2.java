@@ -19,7 +19,6 @@ import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.LocationMapper;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.repository.party.PartyRepository;
-import com.wap.app2.gachitayo.service.auth.GoogleAuthService;
 import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverService;
 import com.wap.app2.gachitayo.service.member.MemberService;
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PartyService {
+public class PartyService2 {
     private final PartyRepository partyRepository;
     private final StopoverService stopoverService;
     private final StopoverMapper stopoverMapper;
