@@ -31,12 +31,12 @@ public class PartyController {
 
     @PostMapping("/{id}")
     public ResponseEntity<?> addStopoverToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverAddRequestDto requestDto) {
-        return partyService2.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
+        return partyFacade.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
     }
 
     @PostMapping("/{id}/attend")
     public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        return partyService2.attendParty(memberDetails.getUsername(), id);
+        return partyFacade.attendParty(memberDetails.getUsername(), id);
     }
 
     @PostMapping("/search")
