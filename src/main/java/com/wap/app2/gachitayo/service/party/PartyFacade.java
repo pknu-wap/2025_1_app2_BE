@@ -8,6 +8,7 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
+import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
@@ -116,10 +117,11 @@ public class PartyFacade {
         // 1. Party 조회
         Party party = partyService.findPartyById(partyId);
 
-        // 2. HOST 검증
+        // 2. HOST 검증 - MemberService 단에서 검증 후 리턴으로 리펙토링 가능
         Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
+        // PartyMemberService 단에서 검증 후 리턴으로 리팩토링 가능
         PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
         if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
         if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
@@ -147,6 +149,52 @@ public class PartyFacade {
         ));
     }
 
+    public ResponseEntity<?> updateStopover(String email, Long partyId, StopoverUpdateDto updateDto) {
+        log.info("\n===== 파티 내 하차 지점 수정 시도 =====");
+
+        // 1. 파티 조회
+        Party party = partyService.findPartyById(partyId);
+
+        // 2. HOST 검증
+        Member hostMember = memberService.getUserByEmail(email);
+        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
+        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+
+        // 3. Stopover 조회
+        Stopover stopover = party.getStopovers().stream()
+                .filter(s -> s.getId().equals(updateDto.getStopoverId()))
+                .findFirst()
+                .orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
+
+        // 4. Stopover 수정
+        boolean isUpdatedStopover = stopoverService.updateStopover(stopover, updateDto.getLocation(), updateDto.getStopoverType());
+
+        // 5. PaymentStatus (참가자 변경 시) 수정
+        boolean isUpdatedPaymentStatus = false;
+        if (updateDto.getMemberEmail() != null) {
+            Member member = memberService.getUserByEmail(updateDto.getMemberEmail());
+            if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+            PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, member);
+            if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+
+            isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
+        }
+
+        // 6. 결과 반환
+        if (isUpdatedStopover || isUpdatedPaymentStatus) {
+            log.info("\n===== 수정 사항 성공 반영 =====");
+            return ResponseEntity.ok(Map.of(
+                    "stopovers", party.getStopovers().stream().map(stopoverMapper::toDto).toList()
+            ));
+        }
+
+        log.info("\n===== 수정 사항 없음 =====");
+        return ResponseEntity.noContent().build();
+    }
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
         if (genderOption == GenderOption.MIXED) return;
