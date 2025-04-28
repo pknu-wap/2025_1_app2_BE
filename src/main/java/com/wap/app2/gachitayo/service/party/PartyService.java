@@ -39,7 +39,6 @@ public class PartyService {
         return partyRepository.findById(id).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
     }
 
-    @Transactional
     public Stopover findOrCreateStopover(Party party, LocationDto locationDto) {
         Location location = locationMapper.toEntity(locationDto);
 
@@ -54,4 +53,8 @@ public class PartyService {
                 });
     }
 
+    @Transactional(readOnly = true)
+    public List<Party> findPartiesWithinRadius(double latitude, double longitude, double radius) {
+        return partyRepository.findPartiesWithRadius(latitude, longitude, radius);
+    }
 }
