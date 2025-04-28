@@ -77,6 +77,42 @@ public class PartyFacade {
                 .build();
     }
 
+    public ResponseEntity<?> attendParty(String email, Long partyId) {
+        // 1. Party 조회
+        Party party = partyService.findPartyById(partyId);
+
+        // 2. Member 조회
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        // 3. Validation
+        if (party.getPartyMemberList().size() >= party.getMaxPeople()) {
+            throw new TagogayoException(ErrorCode.EXCEED_PARTY_MEMBER);
+        }
+        if (partyMemberService.isInParty(party, member)) {
+            throw new TagogayoException(ErrorCode.ALREADY_PARTY_MEMBER);
+        }
+        validateGenderOption(party.getGenderOption(), member.getGender());
+
+        // 4. PartyMember 등록
+        PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
+
+        // 5. Map 으로 간단히 응답
+        return ResponseEntity.ok(Map.of(
+                "message", "파티 참가 요청이 완료되었습니다.",
+                "party_id", party.getId(),
+                "party_member_id", participant.getId(),
+                "party_members", party.getPartyMemberList()
+        ));
+    }
+    private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
+        if (genderOption == GenderOption.MIXED) return;
+        String optionGender = genderOption.name().substring(5); // "ONLY_MALE" → "MALE"
+        if (!optionGender.equalsIgnoreCase(memberGender.name())) {
+            throw new TagogayoException(ErrorCode.NOT_MATCH_GENDER_OPTION);
+        }
+    }
+
     private GenderOption resolveGenderOption(RequestGenderOption requestGenderOption, Member host) {
         if(requestGenderOption == RequestGenderOption.ONLY){
             if(host.getGender() == Gender.MALE) return GenderOption.ONLY_MALE;
