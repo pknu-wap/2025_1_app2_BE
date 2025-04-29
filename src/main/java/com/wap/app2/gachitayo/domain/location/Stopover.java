@@ -31,10 +31,10 @@ public class Stopover {
     private Party party;
 
     @Setter
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Fare fare;
 
-    @OneToMany(mappedBy = "stopover")
+    @OneToMany(mappedBy = "stopover", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PaymentStatus> paymentStatusList = new ArrayList<>();
 
@@ -43,6 +43,10 @@ public class Stopover {
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private LocationType stopoverType = LocationType.STOPOVER;
+
+    public void addPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatusList.add(paymentStatus);
+    }
 
     public boolean update(Location location, LocationType stopoverType) {
         boolean isUpdated = false;
