@@ -13,6 +13,7 @@ import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
+import com.wap.app2.gachitayo.dto.response.StopoverAndPartyMemberResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
@@ -97,7 +98,7 @@ public class PartyFacade {
         validateGenderOption(party.getGenderOption(), member.getGender());
 
         // 4. PartyMember 등록
-        PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
+        partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
 
         // 5. Map 으로 간단히 응답
         return ResponseEntity.ok(Map.of(
@@ -135,10 +136,8 @@ public class PartyFacade {
         stopover.addPaymentStatus(paymentStatus);
 
         log.info("\n===== 하차 지점 추가 성공 =====");
-        
-        return ResponseEntity.ok(Map.of(
-                "stopover", party.getStopovers().stream().map(stopoverMapper::toDto).toList()
-        ));
+
+        return ResponseEntity.ok(toStopoverAndPartyMemberResponseDtoList(party));
     }
 
     public ResponseEntity<?> updateStopover(String email, Long partyId, StopoverUpdateDto updateDto) {
@@ -171,9 +170,7 @@ public class PartyFacade {
         // 5. 결과 반환
         if (isUpdatedStopover || isUpdatedPaymentStatus) {
             log.info("\n===== 수정 사항 성공 반영 =====");
-            return ResponseEntity.ok(Map.of(
-                    "stopovers", party.getStopovers().stream().map(stopoverMapper::toDto).toList()
-            ));
+            return ResponseEntity.ok(toStopoverAndPartyMemberResponseDtoList(party));
         }
 
         log.info("\n===== 수정 사항 없음 =====");
@@ -228,6 +225,28 @@ public class PartyFacade {
                 .radius(partyEntity.getAllowRadius())
                 .genderOption(partyEntity.getGenderOption())
                 .build();
+    }
+
+    private List<StopoverAndPartyMemberResponseDto> toStopoverAndPartyMemberResponseDtoList(Party party) {
+        return party.getStopovers().stream()
+                .map(s -> StopoverAndPartyMemberResponseDto.builder()
+                        .stopover(stopoverMapper.toDto(s))
+                        .partyMembers(
+                                s.getPaymentStatusList().stream()
+                                        .map(ps -> {
+                                            PartyMember partyMember = ps.getPartyMember();
+                                            Member member = partyMember.getMember();
+                                            return PartyMemberResponseDto.builder()
+                                                    .id(partyMember.getId())
+                                                    .name(member.getName())
+                                                    .email(member.getEmail())
+                                                    .gender(member.getGender())
+                                                    .role(partyMember.getMemberRole())
+                                                    .build();
+                                        }).toList()
+                        )
+                        .build()
+                ).toList();
     }
 
     private Party verificationPartyAndHost(String email, Long partyId) {
