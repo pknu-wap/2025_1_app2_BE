@@ -11,6 +11,7 @@ import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
 import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
+import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
 import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
@@ -99,11 +100,17 @@ public class PartyFacade {
         PartyMember participant = partyMemberService.connectMemberWithParty(party, member, PartyMemberRole.MEMBER);
 
         // 5. Map 으로 간단히 응답
-        // 응답에 현재 유저 목록 보여주도록 수정해야 함.
         return ResponseEntity.ok(Map.of(
                 "message", "파티 참가 요청이 완료되었습니다.",
                 "party_id", party.getId(),
-                "party_member_id", participant.getId()
+                "party_members", party.getPartyMemberList().stream()
+                                        .map(pm -> PartyMemberResponseDto.builder()
+                                        .id(pm.getId())
+                                        .name(pm.getMember().getName())
+                                        .email(pm.getMember().getEmail())
+                                        .gender(pm.getMember().getGender())
+                                        .role(pm.getMemberRole())
+                                        .build()).toList()
         ));
     }
 
