@@ -117,63 +117,46 @@ public class PartyFacade {
     public ResponseEntity<?> addStopoverToParty(String email, Long partyId, StopoverAddRequestDto requestDto) {
         log.info("\n===== 파티 내 하차 지점 추가 시도 =====");
 
-        // 1. Party 조회
-        Party party = partyService.findPartyById(partyId);
+        // 1. 파티, HOST 검증
+        Party party = verificationPartyAndHost(email, partyId);
 
-        // 2. HOST 검증 - MemberService 단에서 검증 후 리턴으로 리펙토링 가능
-        Member hostMember = memberService.getUserByEmail(email);
-        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
-
-        // PartyMemberService 단에서 검증 후 리턴으로 리팩토링 가능
-        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
-        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
-        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
-
-        // 3. 추가할 참가자 Member 검증
+        // 2. 추가할 참가자 Member 검증
         Member participant = memberService.getUserByEmail(requestDto.getMemberEmail());
         if (participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         PartyMember participantMember = partyMemberService.getPartyMemberByPartyAndMember(party, participant);
         if (participantMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
-        // 4. Stopover 찾거나 생성
-        Stopover stopover = partyService.findOrCreateStopover(party, requestDto.getLocation());
+        // 3. Stopover 찾거나 생성
+        Stopover stopover = stopoverFacade.findOrCreateStopover(party, requestDto.getLocation());
 
-        // 5. PaymentStatus 연결
+        // 4. PaymentStatus 연결
         PaymentStatus paymentStatus = paymentStatusService.connectPartyMemberWithStopover(participantMember, stopover);
-        stopoverService.addPaymentStatus(stopover, paymentStatus);
+        stopover.addPaymentStatus(paymentStatus);
 
         log.info("\n===== 하차 지점 추가 성공 =====");
         
         return ResponseEntity.ok(Map.of(
-                "stopover", stopoverMapper.toDto(stopover)
+                "stopover", party.getStopovers().stream().map(stopoverMapper::toDto).toList()
         ));
     }
 
     public ResponseEntity<?> updateStopover(String email, Long partyId, StopoverUpdateDto updateDto) {
         log.info("\n===== 파티 내 하차 지점 수정 시도 =====");
 
-        // 1. 파티 조회
-        Party party = partyService.findPartyById(partyId);
+        // 1. 파티, HOST 검증
+        Party party = verificationPartyAndHost(email, partyId);
 
-        // 2. HOST 검증
-        Member hostMember = memberService.getUserByEmail(email);
-        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
-
-        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
-        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
-        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
-
-        // 3. Stopover 조회
+        // 2. Stopover 조회
         Stopover stopover = party.getStopovers().stream()
                 .filter(s -> s.getId().equals(updateDto.getStopoverId()))
                 .findFirst()
                 .orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
 
-        // 4. Stopover 수정
-        boolean isUpdatedStopover = stopoverService.updateStopover(stopover, updateDto.getLocation(), updateDto.getStopoverType());
+        // 3. Stopover 수정
+        boolean isUpdatedStopover = stopoverFacade.updateStopover(stopover, updateDto.getLocation(), updateDto.getStopoverType());
 
-        // 5. PaymentStatus (참가자 변경 시) 수정
+        // 4. PaymentStatus (참가자 변경 시) 수정
         boolean isUpdatedPaymentStatus = false;
         if (updateDto.getMemberEmail() != null) {
             Member member = memberService.getUserByEmail(updateDto.getMemberEmail());
@@ -185,7 +168,7 @@ public class PartyFacade {
             isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
         }
 
-        // 6. 결과 반환 - 응답에 경유지 + 내리는 유저 정보 포함하도록 수정해야 함.
+        // 5. 결과 반환
         if (isUpdatedStopover || isUpdatedPaymentStatus) {
             log.info("\n===== 수정 사항 성공 반영 =====");
             return ResponseEntity.ok(Map.of(
@@ -245,6 +228,20 @@ public class PartyFacade {
                 .radius(partyEntity.getAllowRadius())
                 .genderOption(partyEntity.getGenderOption())
                 .build();
+    }
+
+    private Party verificationPartyAndHost(String email, Long partyId) {
+        Party party = partyService.findPartyById(partyId);
+
+        // HOST 검증
+        Member hostMember = memberService.getUserByEmail(email);
+        if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
+        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+
+        return party;
     }
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
