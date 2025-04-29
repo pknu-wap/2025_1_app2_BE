@@ -16,7 +16,7 @@ import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
-import com.wap.app2.gachitayo.service.location.StopoverService;
+import com.wap.app2.gachitayo.service.location.StopoverFacade;
 import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +33,10 @@ import java.util.Map;
 @Transactional
 public class PartyFacade {
     private final PartyService partyService;
-    private final StopoverService stopoverService;
     private final PaymentStatusService paymentStatusService;
     private final MemberService memberService;
     private final PartyMemberService partyMemberService;
+    private final StopoverFacade stopoverFacade;
 
     private final StopoverMapper stopoverMapper;
 
@@ -44,18 +44,22 @@ public class PartyFacade {
         // 1. 사용자 조회
         Member host = memberService.getUserByEmail(email);
         if(host == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
-
+        
         // 2. 출발/목적지 생성
-        Stopover start = stopoverService.createStopover(requestDto.getStartLocation().getLocation(), LocationType.START);
-        Stopover dest = stopoverService.createStopover(requestDto.getDestination().getLocation(), LocationType.DESTINATION);
+        Stopover start = stopoverFacade.createStopover(
+                requestDto.getStartLocation().getLocation(), LocationType.START
+        );
+        Stopover dest = stopoverFacade.createStopover(
+                requestDto.getDestination().getLocation(), LocationType.DESTINATION
+        );
 
         // 3. 파티 생성
-        Party party = partyService.createParty(
-                List.of(start, dest),
-                requestDto.getMaxPerson(),
-                requestDto.getRadius(),
-                resolveGenderOption(requestDto.getGenderOption(), host)
-        );
+        Party party = Party.builder()
+                .stopovers(List.of(start, dest))
+                .maxPeople(requestDto.getMaxPerson())
+                .allowRadius(requestDto.getRadius())
+                .genderOption(resolveGenderOption(requestDto.getGenderOption(), host))
+                .build();
 
         // 4. Stopover - Party 연결
         start.setParty(party);
@@ -66,7 +70,10 @@ public class PartyFacade {
 
         // 6. 목적지 - PaymentStatus 연결
         PaymentStatus paymentStatus = paymentStatusService.connectPartyMemberWithStopover(hostMember, dest);
-        stopoverService.addPaymentStatus(dest, paymentStatus);
+        dest.addPaymentStatus(paymentStatus);
+
+        // 7. 파티 저장
+        partyService.saveParty(party);
 
         return ResponseEntity.ok().body(toResponseDto(party, host, start, dest));
     }
