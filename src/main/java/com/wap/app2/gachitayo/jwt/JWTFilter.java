@@ -56,7 +56,7 @@ public class JWTFilter extends OncePerRequestFilter {
             throw new TagogayoException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        MemberDetails memberDetails = new MemberDetails(member);
+        MemberDetails memberDetails = new MemberDetails(member.getEmail());
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(memberDetails, null, new ArrayList<>());
         SecurityContextHolder.getContext().setAuthentication(auth);

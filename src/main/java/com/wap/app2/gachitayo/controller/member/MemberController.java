@@ -22,6 +22,6 @@ public class MemberController {
     //추후 member email or id 로 해당유저 정보 가져올 수 있게 리팩토링 예정
     @GetMapping
     public ResponseEntity<MemberProfileResponseDto> getProfile(@AuthenticationPrincipal MemberDetails memberDetails) {
-        return memberService.getMemberProfile(memberDetails);
+        return memberService.getMemberProfile(memberDetails.getUsername());
     }
 }
