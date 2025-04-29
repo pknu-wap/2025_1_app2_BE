@@ -23,11 +23,16 @@ public class PaymentStatusService {
     }
 
     @Transactional
-    public boolean updateStopover(PartyMember partyMember, Stopover stopover) {
+    public boolean updateStopover(PartyMember partyMember, Stopover newStopover) {
         PaymentStatus existingPaymentStatus = paymentStatusRepository.findByPartyMember(partyMember);
         if(existingPaymentStatus == null) return false;
-        if(existingPaymentStatus.getStopover().equals(stopover)) return false;
-        existingPaymentStatus.setStopover(stopover);
+        if(existingPaymentStatus.getStopover().equals(newStopover)) return false;
+
+        Stopover oldStopover = existingPaymentStatus.getStopover();
+        oldStopover.getPaymentStatusList().remove(existingPaymentStatus);
+
+        newStopover.getPaymentStatusList().add(existingPaymentStatus);
+        existingPaymentStatus.setStopover(newStopover);
         paymentStatusRepository.save(existingPaymentStatus);
         return true;
     }
