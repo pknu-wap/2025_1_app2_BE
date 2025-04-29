@@ -7,14 +7,10 @@ import java.util.Collection;
 import java.util.List;
 
 public class MemberDetails implements UserDetails {
-    private final Member member;
+    private final String email;
 
-    public MemberDetails(Member member) {
-        this.member = member;
-    }
-
-    public Member getUser() {
-        return member;
+    public MemberDetails(String email) {
+        this.email = email;
     }
 
     @Override
@@ -33,6 +29,6 @@ public class MemberDetails implements UserDetails {
      */
     @Override
     public String getUsername() {
-        return member.getEmail();
+        return email;
     }
 }
