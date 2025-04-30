@@ -36,10 +36,10 @@ public class Party {
     @Builder.Default
     private GenderOption genderOption = GenderOption.MIXED;
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "party", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
     private List<PartyMember> partyMemberList = new ArrayList<>();
 }

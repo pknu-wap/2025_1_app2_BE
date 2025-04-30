@@ -19,11 +19,14 @@ public class PartyMemberService {
 
     @Transactional
     public PartyMember connectMemberWithParty(Party party, Member member, PartyMemberRole role) {
-        return partyMemberRepository.save(PartyMember.builder()
+        PartyMember partyMember = PartyMember.builder()
                 .party(party)
                 .member(member)
                 .memberRole(role)
-                .build());
+                .build();
+
+        party.getPartyMemberList().add(partyMember);
+        return partyMemberRepository.save(partyMember);
     }
 
     @Transactional(readOnly = true)
