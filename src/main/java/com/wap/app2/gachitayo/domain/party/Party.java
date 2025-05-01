@@ -32,15 +32,11 @@ public class Party {
     @Builder.Default
     private double allowRadius = 0.0; // m 단위, 0이면 같은 목적지
 
-    @NotNull
     @Column(name="create_time")
-    @Builder.Default
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    @NotNull
     @Column(name="expire_time")
-    @Builder.Default
-    private LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(30);
+    private LocalDateTime expiredAt;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -53,4 +49,12 @@ public class Party {
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
     private List<PartyMember> partyMemberList = new ArrayList<>();
+
+    @PrePersist
+    public void setTime() {
+        if(expiredAt == null && createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+            this.expiredAt = this.createdAt.plusMinutes(30);
+        }
+    }
 }
