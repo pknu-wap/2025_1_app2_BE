@@ -118,6 +118,8 @@ public class GoogleAuthService {
         try {
             GoogleIdToken idToken = verifier.verify(_idToken);
 
+            if (idToken == null) throw new TagogayoException(ErrorCode.INVALID_TOKEN);
+
             GoogleIdToken.Payload payload = idToken.getPayload();
             return payload.getEmail();
 
