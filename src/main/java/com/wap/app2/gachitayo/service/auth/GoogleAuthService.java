@@ -82,7 +82,6 @@ public class GoogleAuthService {
     }
 
     public ResponseEntity<TokenResponseDto> reissueToken(ReissueReqeuestDto requestDto) {
-        //RTR 방식 도입으로 토큰 탈취에 대한 보안강화 예정
         String rfToken = requestDto.refreshToken();
 
         boolean isValid = jwtTokenProvider.isValid(rfToken);
@@ -98,6 +97,8 @@ public class GoogleAuthService {
             //rf expired, 토큰 검증 완료되었는데 db 케이스는 존재할 수 없음.
             throw new TagogayoException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
+
+        redisTemplate.delete(rfToken);
 
         Token token = generateToken(email);
 
