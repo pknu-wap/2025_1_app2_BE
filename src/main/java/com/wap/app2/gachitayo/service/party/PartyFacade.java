@@ -224,6 +224,7 @@ public class PartyFacade {
                 .maxPeople(partyEntity.getMaxPeople())
                 .radius(partyEntity.getAllowRadius())
                 .genderOption(partyEntity.getGenderOption())
+                .createdAt(partyEntity.getCreatedAt())
                 .build();
     }
 
