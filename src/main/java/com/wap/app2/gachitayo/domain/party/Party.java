@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,6 +31,16 @@ public class Party {
     @Column(nullable = false, name="radius")
     @Builder.Default
     private double allowRadius = 0.0; // m 단위, 0이면 같은 목적지
+
+    @NotNull
+    @Column(name="create_time")
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @NotNull
+    @Column(name="expire_time")
+    @Builder.Default
+    private LocalDateTime expiredAt = LocalDateTime.now().plusMinutes(30);
 
     @NotNull
     @Enumerated(EnumType.STRING)
