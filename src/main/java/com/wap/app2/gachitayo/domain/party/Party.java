@@ -41,5 +41,6 @@ public class Party {
     private List<Stopover> stopovers = new ArrayList<>();
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
 }
