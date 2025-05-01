@@ -17,13 +17,11 @@ import com.wap.app2.gachitayo.repository.auth.MemberRepository;
 import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.time.Duration;
 import java.util.Collections;
 
 @Service
@@ -35,7 +33,6 @@ public class GoogleAuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
-    private final StringRedisTemplate redisTemplate;
 
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
@@ -46,7 +43,13 @@ public class GoogleAuthService {
 
         if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
-        Token token = generateToken(email);
+        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken();
+
+        Token token = new Token(
+                accessToken,
+                refreshToken
+        );
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }
@@ -76,45 +79,33 @@ public class GoogleAuthService {
 
         memberRepository.save(member);
 
-        Token token = generateToken(email);
+        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken();
+
+        Token token = new Token(
+                accessToken,
+                refreshToken
+        );
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }
 
     public ResponseEntity<TokenResponseDto> reissueToken(ReissueReqeuestDto requestDto) {
-        //RTR 방식 도입으로 토큰 탈취에 대한 보안강화 예정
-        String rfToken = requestDto.refreshToken();
+        //db에서 해당 refreshToken 가진사람 가져오기
+        //repository.get~~();
+        //레디스 사용시 만료 되었는지 확인할 필요없음
 
-        boolean isValid = jwtTokenProvider.isValid(rfToken);
+        boolean isValid = jwtTokenProvider.isValid(requestDto.refreshToken());
 
-        if (!isValid) {
-            //rf expired
-            throw new TagogayoException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
+        //Redis 사용시 불필요함
+        if (!isValid) return ResponseEntity.internalServerError().build();
 
-        String email = redisTemplate.opsForValue().get(rfToken);
-
-        if (email == null) {
-            //rf expired, 토큰 검증 완료되었는데 db 케이스는 존재할 수 없음.
-            throw new TagogayoException(ErrorCode.REFRESH_TOKEN_EXPIRED);
-        }
-
-        Token token = generateToken(email);
-
-        return ResponseEntity.ok(TokenResponseDto.from(token));
-    }
-
-    public Token generateToken(String email) {
-        String accessToken = jwtTokenProvider.createAccessToken(email);
-        String refreshToken = jwtTokenProvider.createRefreshToken();
-
-        //TTL 일주일로 레디스 저장
-        redisTemplate.opsForValue().set(refreshToken, email, Duration.ofDays(7));
-
-        return new Token(
-                accessToken,
-                refreshToken
+        //유저를 디비에서 유저를 가져오는게 아니라 모름...
+        Token token = new Token(
+            jwtTokenProvider.createAccessToken("test@pukyong.ac.kr"),
+            jwtTokenProvider.createRefreshToken()
         );
+        return ResponseEntity.ok(TokenResponseDto.from(token));
     }
 
     public String getUserEmail(String _idToken, String _accessToken) {
