@@ -24,13 +24,16 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Duration;
-import java.util.Collections;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
-    @Value("${spring.google.clientId}")
-    private String clientId;
+    @Value("${spring.google.iosID}")
+    private String ios_clientID;
+
+    @Value("${spring.google.androidID}")
+    private String android_clientID;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final MemberRepository memberRepository;
@@ -122,7 +125,7 @@ public class GoogleAuthService {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
-                .setAudience(Collections.singletonList(clientId))
+                .setAudience(List.of(android_clientID, ios_clientID))
                 .build();
 
         try {
