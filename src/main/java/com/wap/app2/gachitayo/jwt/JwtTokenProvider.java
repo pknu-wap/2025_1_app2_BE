@@ -17,7 +17,7 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
     private final SecretKey secretKey;
-    private final Long AccessTokenExpiredMs = 1 * 1000L * 60L * 60L; // 1시간
+    private final Long AccessTokenExpiredMs = 999* 1000L * 60L * 60L; // 1시간
     private final Long RefreshTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; // 1주일
 
     public JwtTokenProvider(@Value("${spring.jwt.secret}") String secret) {
