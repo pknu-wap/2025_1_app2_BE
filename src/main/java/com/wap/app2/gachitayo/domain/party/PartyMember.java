@@ -31,7 +31,7 @@ public class PartyMember {
     @JoinColumn(name = "party_id")
     private Party party;
 
-    @OneToMany(mappedBy = "partyMember", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "partyMember", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<PaymentStatus> paymentStatusList = new ArrayList<>();
 

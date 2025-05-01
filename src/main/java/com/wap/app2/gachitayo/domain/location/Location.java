@@ -27,7 +27,7 @@ public class Location {
     @Column(nullable = false)
     private double longitude;
 
-    @OneToMany(mappedBy = "location")
+    @OneToMany(mappedBy = "location", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
 
@@ -42,5 +42,15 @@ public class Location {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public void addStopover(Stopover stopover) {
+        this.getStopovers().add(stopover);
+    }
+
+    public boolean isSameLocation(Location other) {
+        return this.address.equalsIgnoreCase(other.address)
+                && Double.compare(this.latitude, other.latitude) == 0
+                && Double.compare(this.longitude, other.longitude) == 0;
     }
 }
