@@ -21,6 +21,6 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
 
     @Modifying
     @Transactional
-    @Query("DELETE FROM Party p WHERE p.createdAt <= :expiredAt")
-    int deleteExpiredParties(@Param("expiredAt") LocalDateTime expiredAt);
+    @Query("DELETE FROM Party p WHERE p.expiredAt <= :now")
+    int deleteExpiredParties(@Param("now") LocalDateTime now);
 }
