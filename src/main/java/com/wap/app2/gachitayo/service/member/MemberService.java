@@ -1,12 +1,11 @@
 package com.wap.app2.gachitayo.service.member;
 
 import com.wap.app2.gachitayo.domain.Member.Member;
-import com.wap.app2.gachitayo.domain.Member.MemberDetails;
 import com.wap.app2.gachitayo.dto.request.EditMemberRequest;
 import com.wap.app2.gachitayo.dto.response.MemberProfileResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
-import com.wap.app2.gachitayo.repository.auth.MemberRepository;
+import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
