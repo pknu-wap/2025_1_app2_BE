@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class PartyExpirationScheduler {
     private final PartyRepository partyRepository;
 
-    @Scheduled(fixedRate = 60 * 1000) // 1분마다 실행
+    @Scheduled(fixedRate = 60 * 10 * 1000) // 5분마다 실행
     public void deleteExpiredParties() {
         LocalDateTime now = LocalDateTime.now();
         int deleteCount = partyRepository.deleteExpiredParties(now);
