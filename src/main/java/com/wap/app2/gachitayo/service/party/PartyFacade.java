@@ -49,10 +49,10 @@ public class PartyFacade {
         
         // 2. 출발/목적지 생성
         Stopover start = stopoverFacade.createStopover(
-                requestDto.getStartLocation().getLocation(), LocationType.START
+                requestDto.getStartLocation(), LocationType.START
         );
         Stopover dest = stopoverFacade.createStopover(
-                requestDto.getDestination().getLocation(), LocationType.DESTINATION
+                requestDto.getDestinationLocation(), LocationType.DESTINATION
         );
 
         // 3. 파티 생성
