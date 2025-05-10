@@ -3,7 +3,7 @@ package com.wap.app2.gachitayo.config;
 import com.wap.app2.gachitayo.jwt.JWTExceptionFilter;
 import com.wap.app2.gachitayo.jwt.JWTFilter;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
-import com.wap.app2.gachitayo.repository.auth.MemberRepository;
+import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

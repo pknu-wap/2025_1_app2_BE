@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.repository.auth;
+package com.wap.app2.gachitayo.repository.member;
 
 import com.wap.app2.gachitayo.domain.Member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;

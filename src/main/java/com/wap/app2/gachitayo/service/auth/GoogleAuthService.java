@@ -13,7 +13,7 @@ import com.wap.app2.gachitayo.dto.response.TokenResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
-import com.wap.app2.gachitayo.repository.auth.MemberRepository;
+import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
