@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.domain.Member;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Entity
@@ -20,9 +20,10 @@ public class Review {
     private Member member;
 
     @NotNull
-    //0 ~ 10, 2 = 별 1개
-    private int score;
+    @DecimalMin("0.5")
+    @DecimalMax("5.0")
+    private double score;
 
-    @Lob
+    @Column(length = 2100) // 최대 500자 검증
     private String contents;
 }
