@@ -1,5 +1,6 @@
-package com.wap.app2.gachitayo.domain.member;
+package com.wap.app2.gachitayo.domain.review;
 
+import com.wap.app2.gachitayo.domain.member.Member;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
