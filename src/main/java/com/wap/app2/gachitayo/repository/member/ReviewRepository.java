@@ -1,12 +1,11 @@
 package com.wap.app2.gachitayo.repository.member;
 
-import com.wap.app2.gachitayo.domain.member.Member;
-import com.wap.app2.gachitayo.domain.member.Review;
+import com.wap.app2.gachitayo.domain.review.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    List<Review> findByMemberId(Long memberId);
+    List<Review> findByTargetId(Long targetId);
+    boolean existsByPartyIdAndAuthorIdAndTargetId(Long partyId, Long authorId, Long targetId);
 }
