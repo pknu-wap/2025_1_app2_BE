@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.domain.Member;
+package com.wap.app2.gachitayo.domain.member;
 
 import com.wap.app2.gachitayo.Enum.Gender;
 import com.wap.app2.gachitayo.domain.party.PartyMember;

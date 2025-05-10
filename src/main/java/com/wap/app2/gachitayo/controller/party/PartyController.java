@@ -1,6 +1,6 @@
 package com.wap.app2.gachitayo.controller.party;
 
-import com.wap.app2.gachitayo.domain.Member.MemberDetails;
+import com.wap.app2.gachitayo.domain.member.MemberDetails;
 import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
 import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
 import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;

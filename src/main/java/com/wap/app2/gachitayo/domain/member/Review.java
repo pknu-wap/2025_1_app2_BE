@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.domain.Member;
+package com.wap.app2.gachitayo.domain.member;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;

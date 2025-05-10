@@ -1,4 +1,4 @@
-package com.wap.app2.gachitayo.domain.Member;
+package com.wap.app2.gachitayo.domain.member;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.service.member;
 
-import com.wap.app2.gachitayo.domain.Member.Member;
-import com.wap.app2.gachitayo.domain.Member.Review;
+import com.wap.app2.gachitayo.domain.member.Member;
+import com.wap.app2.gachitayo.domain.member.Review;
 import com.wap.app2.gachitayo.dto.request.EditMemberRequest;
 import com.wap.app2.gachitayo.dto.response.MemberProfileResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;

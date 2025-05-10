@@ -1,6 +1,6 @@
 package com.wap.app2.gachitayo.controller.member;
 
-import com.wap.app2.gachitayo.domain.Member.MemberDetails;
+import com.wap.app2.gachitayo.domain.member.MemberDetails;
 import com.wap.app2.gachitayo.dto.request.EditMemberRequest;
 import com.wap.app2.gachitayo.dto.response.MemberProfileResponseDto;
 import com.wap.app2.gachitayo.service.member.MemberService;

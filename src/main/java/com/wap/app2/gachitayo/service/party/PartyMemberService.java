@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.service.party;
 
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
-import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
