@@ -4,7 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.auth.Token;
 import com.wap.app2.gachitayo.dto.request.LoginRequestDto;
 import com.wap.app2.gachitayo.dto.request.RegisterRequestDto;

@@ -1,7 +1,8 @@
-package com.wap.app2.gachitayo.domain.Member;
+package com.wap.app2.gachitayo.domain.member;
 
 import com.wap.app2.gachitayo.Enum.Gender;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
+import com.wap.app2.gachitayo.domain.review.Review;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -55,4 +56,12 @@ public class Member {
     @OneToMany(mappedBy = "member")
     @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> writtenReviews = new ArrayList<>(); //작성한 리뷰
+
+    @OneToMany(mappedBy = "target", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> receivedReviews = new ArrayList<>(); //받은 리뷰
 }

@@ -2,6 +2,7 @@ package com.wap.app2.gachitayo.domain.party;
 
 import com.wap.app2.gachitayo.Enum.GenderOption;
 import com.wap.app2.gachitayo.domain.location.Stopover;
+import com.wap.app2.gachitayo.domain.review.Review;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -43,4 +44,8 @@ public class Party {
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
     @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 }
