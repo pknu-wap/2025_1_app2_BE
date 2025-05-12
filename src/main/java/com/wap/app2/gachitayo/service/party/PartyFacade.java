@@ -214,6 +214,21 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
+    @Transactional
+    public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
+        Party party = verificationPartyAndHost(hostEmail, partyId);
+
+        PartyMember targetPartyMember = partyMemberService.getPartyMemberById(targetPartyMemberId);
+
+        party.getPartyMemberList().stream()
+                .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.BOOKKEEPER))
+                .forEach(pm -> partyMemberService.changePartyMemberRole(pm, PartyMemberRole.MEMBER));
+
+        partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
+
+        return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
+    }
+
     private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
@@ -232,21 +247,22 @@ public class PartyFacade {
                 .map(s -> StopoverAndPartyMemberResponseDto.builder()
                         .stopover(stopoverMapper.toDto(s))
                         .partyMembers(
-                                s.getPaymentStatusList().stream()
-                                        .map(ps -> {
-                                            PartyMember partyMember = ps.getPartyMember();
-                                            Member member = partyMember.getMember();
-                                            return PartyMemberResponseDto.builder()
-                                                    .id(partyMember.getId())
-                                                    .name(member.getName())
-                                                    .email(member.getEmail())
-                                                    .gender(member.getGender())
-                                                    .role(partyMember.getMemberRole())
-                                                    .build();
-                                        }).toList()
+                            s.getPaymentStatusList().stream()
+                                .map(ps -> toPartyMemberResponseDto(ps.getPartyMember())
+                                ).toList()
                         )
                         .build()
                 ).toList();
+    }
+
+    private PartyMemberResponseDto toPartyMemberResponseDto(PartyMember partyMember) {
+        return PartyMemberResponseDto.builder()
+                .id(partyMember.getId())
+                .name(partyMember.getMember().getName())
+                .email(partyMember.getMember().getEmail())
+                .gender(partyMember.getMember().getGender())
+                .role(partyMember.getMemberRole())
+                .build();
     }
 
     private Party verificationPartyAndHost(String email, Long partyId) {
