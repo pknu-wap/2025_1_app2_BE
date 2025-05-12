@@ -8,6 +8,7 @@ public record MemberProfileResponseDto(
         int age,
         Gender gender,
         String profileImageUrl,
-        String email
+        String email,
+        double review_score
 ) {
 }

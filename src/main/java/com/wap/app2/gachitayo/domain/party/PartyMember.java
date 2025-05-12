@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.domain.party;
 
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
-import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

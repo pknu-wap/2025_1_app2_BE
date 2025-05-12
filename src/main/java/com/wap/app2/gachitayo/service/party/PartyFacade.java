@@ -1,7 +1,7 @@
 package com.wap.app2.gachitayo.service.party;
 
 import com.wap.app2.gachitayo.Enum.*;
-import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
@@ -49,10 +49,10 @@ public class PartyFacade {
         
         // 2. 출발/목적지 생성
         Stopover start = stopoverFacade.createStopover(
-                requestDto.getStartLocation().getLocation(), LocationType.START
+                requestDto.getStartLocation(), LocationType.START
         );
         Stopover dest = stopoverFacade.createStopover(
-                requestDto.getDestination().getLocation(), LocationType.DESTINATION
+                requestDto.getDestinationLocation(), LocationType.DESTINATION
         );
 
         // 3. 파티 생성
