@@ -41,4 +41,9 @@ public class PartyController {
     public ResponseEntity<?> updateStopover(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverUpdateDto updateDto) {
         return partyFacade.updateStopover(memberDetails.getUsername(), id, updateDto);
     }
+
+    @PatchMapping("/{id}/bookkeeper")
+    public ResponseEntity<?> electBookkeeper(@RequestParam("partyMemberId") Long partyMemberId, @PathVariable("id") Long partyId, @AuthenticationPrincipal MemberDetails memberDetails) {
+        return partyFacade.electBookkeeper(partyId, memberDetails.getUsername(), partyMemberId);
+    }
 }
