@@ -1,5 +1,6 @@
 package com.wap.app2.gachitayo.service.party;
 
+import com.wap.app2.gachitayo.Enum.AdditionalRole;
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
 import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.party.Party;
@@ -56,6 +57,12 @@ public class PartyMemberService {
     @Transactional
     public void changePartyMemberRole(PartyMember partyMember, PartyMemberRole role) {
         partyMember.setMemberRole(role);
+        partyMemberRepository.save(partyMember);
+    }
+
+    @Transactional
+    public void changeAdditionalRole(PartyMember partyMember, AdditionalRole role) {
+        partyMember.setAdditionalRole(role);
         partyMemberRepository.save(partyMember);
     }
 
