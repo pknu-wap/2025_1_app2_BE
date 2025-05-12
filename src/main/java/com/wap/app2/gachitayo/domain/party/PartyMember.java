@@ -5,10 +5,7 @@ import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +34,7 @@ public class PartyMember {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Setter
     @Builder.Default
     private PartyMemberRole memberRole = PartyMemberRole.MEMBER;
 }
