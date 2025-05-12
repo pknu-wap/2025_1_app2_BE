@@ -53,6 +53,12 @@ public class PartyMemberService {
         return partyMemberRepository.findById(id).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_MEMBER_NOT_FOUND));
     }
 
+    @Transactional
+    public void changePartyMemberRole(PartyMember partyMember, PartyMemberRole role) {
+        partyMember.setMemberRole(role);
+        partyMemberRepository.save(partyMember);
+    }
+
     private PartyMemberResponseDto toResponseDto(Member member, PartyMemberRole role) {
         return PartyMemberResponseDto.builder()
                 .id(member.getId())
