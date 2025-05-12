@@ -1,5 +1,6 @@
 package com.wap.app2.gachitayo.domain.party;
 
+import com.wap.app2.gachitayo.Enum.AdditionalRole;
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
 import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
@@ -37,4 +38,10 @@ public class PartyMember {
     @Setter
     @Builder.Default
     private PartyMemberRole memberRole = PartyMemberRole.MEMBER;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Setter
+    @Builder.Default
+    private AdditionalRole additionalRole = AdditionalRole.NONE;
 }
