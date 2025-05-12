@@ -111,6 +111,7 @@ public class PartyFacade {
                                         .email(pm.getMember().getEmail())
                                         .gender(pm.getMember().getGender())
                                         .role(pm.getMemberRole())
+                                        .additionalRole(pm.getAdditionalRole())
                                         .build()).toList()
         ));
     }
@@ -220,11 +221,20 @@ public class PartyFacade {
 
         PartyMember targetPartyMember = partyMemberService.getPartyMemberById(targetPartyMemberId);
 
-        party.getPartyMemberList().stream()
-                .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.BOOKKEEPER))
-                .forEach(pm -> partyMemberService.changePartyMemberRole(pm, PartyMemberRole.MEMBER));
+        for(PartyMember pm : party.getPartyMemberList()) {
+            if (pm.getMemberRole().equals(PartyMemberRole.HOST) && pm.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) {
+                partyMemberService.changeAdditionalRole(pm, AdditionalRole.NONE);
+            }
+            else if (pm.getMemberRole().equals(PartyMemberRole.BOOKKEEPER)) {
+                partyMemberService.changePartyMemberRole(pm, PartyMemberRole.MEMBER);
+            }
+        }
 
-        partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
+        if(targetPartyMember.getMemberRole().equals(PartyMemberRole.HOST)) {
+            partyMemberService.changeAdditionalRole(targetPartyMember, AdditionalRole.BOOKKEEPER);
+        } else if (targetPartyMember.getMemberRole().equals(PartyMemberRole.MEMBER)) {
+            partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
+        }
 
         return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
     }
@@ -262,6 +272,7 @@ public class PartyFacade {
                 .email(partyMember.getMember().getEmail())
                 .gender(partyMember.getMember().getGender())
                 .role(partyMember.getMemberRole())
+                .additionalRole(partyMember.getAdditionalRole())
                 .build();
     }
 
