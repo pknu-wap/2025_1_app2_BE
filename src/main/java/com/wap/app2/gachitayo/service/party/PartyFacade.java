@@ -6,14 +6,8 @@ import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
-import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
-import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
-import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
-import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
-import com.wap.app2.gachitayo.dto.response.StopoverAndPartyMemberResponseDto;
+import com.wap.app2.gachitayo.dto.request.*;
+import com.wap.app2.gachitayo.dto.response.*;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
@@ -237,6 +231,33 @@ public class PartyFacade {
         }
 
         return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
+    }
+
+    @Transactional
+    public ResponseEntity<?> reflectCalculatedFare(Long partyId, String bookkeeperEmail, List<FareRequestDto> requestDtoList) {
+        Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
+
+        stopoverFacade.calculateFinalFare(requestDtoList, party.getStopovers());
+        Party updatedParty = partyService.saveParty(party);
+
+        List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
+                .filter(stopover -> !stopover.getStopoverType().equals(LocationType.START))
+                .flatMap(stopover -> stopover.getPaymentStatusList().stream()
+                        .map(ps -> FinalPaymentStatusResponseDto.builder()
+                                .partyMemberInfo(toPartyMemberResponseDto(ps.getPartyMember()))
+                                .paymentStatus(toPaymentStatusResponseDto(stopover, ps))
+                                .build())
+                ).toList();
+        return ResponseEntity.ok(responseDtoList);
+    }
+
+    private PaymentStatusResponseDto toPaymentStatusResponseDto(Stopover stopover, PaymentStatus paymentStatus) {
+        return PaymentStatusResponseDto.builder()
+                .stopoverId(stopover.getId())
+                .baseFare(stopover.getFare().getBaseFigure())
+                .finalFare(paymentStatus.getFinalFigure())
+                .isPaid(paymentStatus.isPaid())
+                .build();
     }
 
     private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
