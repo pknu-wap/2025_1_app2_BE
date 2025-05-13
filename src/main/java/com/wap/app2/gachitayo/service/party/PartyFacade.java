@@ -120,7 +120,7 @@ public class PartyFacade {
         log.info("\n===== 파티 내 하차 지점 추가 시도 =====");
 
         // 1. 파티, HOST 검증
-        Party party = verificationPartyAndHost(email, partyId);
+        Party party = verifyPartyAndPartyMember(email, partyId, PartyMemberRole.HOST);
 
         // 2. 추가할 참가자 Member 검증
         Member participant = memberService.getUserByEmail(requestDto.getMemberEmail());
@@ -145,7 +145,7 @@ public class PartyFacade {
         log.info("\n===== 파티 내 하차 지점 수정 시도 =====");
 
         // 1. 파티, HOST 검증
-        Party party = verificationPartyAndHost(email, partyId);
+        Party party = verifyPartyAndPartyMember(email, partyId, PartyMemberRole.HOST);
 
         // 2. Stopover 조회
         Stopover stopover = party.getStopovers().stream()
@@ -217,7 +217,7 @@ public class PartyFacade {
 
     @Transactional
     public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
-        Party party = verificationPartyAndHost(hostEmail, partyId);
+        Party party = verifyPartyAndPartyMember(hostEmail, partyId, PartyMemberRole.HOST);
 
         PartyMember targetPartyMember = partyMemberService.getPartyMemberById(targetPartyMemberId);
 
@@ -276,18 +276,29 @@ public class PartyFacade {
                 .build();
     }
 
-    private Party verificationPartyAndHost(String email, Long partyId) {
+    private Party verifyPartyAndPartyMember(String email, Long partyId, PartyMemberRole role) {
         Party party = partyService.findPartyById(partyId);
 
-        // HOST 검증
         Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
-        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
-        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
-        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+        PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
+        if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        validatePartyMemberRole(partyMember, role);
 
         return party;
+    }
+
+    private void validatePartyMemberRole(PartyMember partyMember, PartyMemberRole requiredRole) {
+        switch (requiredRole) {
+            case HOST -> {
+                if(!partyMember.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+            }
+            case BOOKKEEPER -> {
+                if(partyMember.getMemberRole().equals(PartyMemberRole.MEMBER)) throw new TagogayoException(ErrorCode.NOT_BOOKKEEPER);
+                else if(partyMember.getMemberRole().equals(PartyMemberRole.HOST) && !partyMember.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) throw new TagogayoException(ErrorCode.NOT_BOOKKEEPER);
+            }
+        }
     }
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {
