@@ -17,7 +17,6 @@ public class FareService {
         Fare defaultFare = Fare.builder()
                 .stopover(stopover)
                 .baseFigure(0)
-                .finalFigure(0)
                 .build();
         return fareRepository.save(defaultFare);
     }
