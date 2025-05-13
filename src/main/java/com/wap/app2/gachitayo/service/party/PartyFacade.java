@@ -111,6 +111,7 @@ public class PartyFacade {
                                         .email(pm.getMember().getEmail())
                                         .gender(pm.getMember().getGender())
                                         .role(pm.getMemberRole())
+                                        .additionalRole(pm.getAdditionalRole())
                                         .build()).toList()
         ));
     }
@@ -214,6 +215,30 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
+    @Transactional
+    public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
+        Party party = verificationPartyAndHost(hostEmail, partyId);
+
+        PartyMember targetPartyMember = partyMemberService.getPartyMemberById(targetPartyMemberId);
+
+        for(PartyMember pm : party.getPartyMemberList()) {
+            if (pm.getMemberRole().equals(PartyMemberRole.HOST) && pm.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) {
+                partyMemberService.changeAdditionalRole(pm, AdditionalRole.NONE);
+            }
+            else if (pm.getMemberRole().equals(PartyMemberRole.BOOKKEEPER)) {
+                partyMemberService.changePartyMemberRole(pm, PartyMemberRole.MEMBER);
+            }
+        }
+
+        if(targetPartyMember.getMemberRole().equals(PartyMemberRole.HOST)) {
+            partyMemberService.changeAdditionalRole(targetPartyMember, AdditionalRole.BOOKKEEPER);
+        } else if (targetPartyMember.getMemberRole().equals(PartyMemberRole.MEMBER)) {
+            partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
+        }
+
+        return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
+    }
+
     private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
@@ -232,21 +257,23 @@ public class PartyFacade {
                 .map(s -> StopoverAndPartyMemberResponseDto.builder()
                         .stopover(stopoverMapper.toDto(s))
                         .partyMembers(
-                                s.getPaymentStatusList().stream()
-                                        .map(ps -> {
-                                            PartyMember partyMember = ps.getPartyMember();
-                                            Member member = partyMember.getMember();
-                                            return PartyMemberResponseDto.builder()
-                                                    .id(partyMember.getId())
-                                                    .name(member.getName())
-                                                    .email(member.getEmail())
-                                                    .gender(member.getGender())
-                                                    .role(partyMember.getMemberRole())
-                                                    .build();
-                                        }).toList()
+                            s.getPaymentStatusList().stream()
+                                .map(ps -> toPartyMemberResponseDto(ps.getPartyMember())
+                                ).toList()
                         )
                         .build()
                 ).toList();
+    }
+
+    private PartyMemberResponseDto toPartyMemberResponseDto(PartyMember partyMember) {
+        return PartyMemberResponseDto.builder()
+                .id(partyMember.getId())
+                .name(partyMember.getMember().getName())
+                .email(partyMember.getMember().getEmail())
+                .gender(partyMember.getMember().getGender())
+                .role(partyMember.getMemberRole())
+                .additionalRole(partyMember.getAdditionalRole())
+                .build();
     }
 
     private Party verificationPartyAndHost(String email, Long partyId) {
