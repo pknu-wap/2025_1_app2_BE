@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -238,16 +239,26 @@ public class PartyFacade {
         Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
 
         stopoverFacade.calculateFinalFare(requestDtoList, party.getStopovers());
-        Party updatedParty = partyService.saveParty(party);
+        partyService.saveParty(party);
+
+        // Party + Stopover
+        Party updatedParty = partyService.findPartyWithStopovers(partyId);
+        // PaymentStatus + PartyMember + Member
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
 
         List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
                 .filter(stopover -> !stopover.getStopoverType().equals(LocationType.START))
-                .flatMap(stopover -> stopover.getPaymentStatusList().stream()
-                        .map(ps -> FinalPaymentStatusResponseDto.builder()
-                                .partyMemberInfo(toPartyMemberResponseDto(ps.getPartyMember()))
-                                .paymentStatus(toPaymentStatusResponseDto(stopover, ps))
-                                .build())
-                ).toList();
+                .flatMap(stopover -> {
+                    List<PaymentStatus> psList = paymentStatusMap.getOrDefault(stopover.getId(), List.of());
+                    return psList.stream()
+                            .map(ps -> FinalPaymentStatusResponseDto.builder()
+                                    .partyMemberInfo(toPartyMemberResponseDto(ps.getPartyMember()))
+                                    .paymentStatus(toPaymentStatusResponseDto(stopover, ps))
+                                    .build());
+                })
+                .toList();
         return ResponseEntity.ok(responseDtoList);
     }
 
@@ -298,7 +309,7 @@ public class PartyFacade {
     }
 
     private Party verifyPartyAndPartyMember(String email, Long partyId, PartyMemberRole role) {
-        Party party = partyService.findPartyById(partyId);
+        Party party = partyService.findPartyWithStopovers(partyId);
 
         Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
