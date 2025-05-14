@@ -24,7 +24,7 @@ public class StopoverService {
 
     public void inputBaseFigure(List<FareRequestDto> fareRequestDtoList) {
         fareRequestDtoList.forEach(fareRequestDto -> {
-            Stopover stopover = stopoverRepository.findById(fareRequestDto.getStopoverId()).orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
+            Stopover stopover = stopoverRepository.findStopoverWithFare(fareRequestDto.getStopoverId()).orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
             stopover.getFare().setBaseFigure(fareRequestDto.getFare());
             stopoverRepository.save(stopover);
         });
