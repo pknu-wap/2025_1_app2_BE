@@ -8,16 +8,20 @@ import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Location;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
+import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.datadto.LocationDto;
 import com.wap.app2.gachitayo.dto.request.FareRequestDto;
 import com.wap.app2.gachitayo.mapper.LocationMapper;
 import com.wap.app2.gachitayo.service.fare.FareService;
+import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,7 @@ public class StopoverFacade {
     private final FareService fareService;
 
     private final LocationMapper locationMapper;
+    private final PaymentStatusService paymentStatusService;
 
     public Stopover createStopover(LocationDto locationDto, LocationType stopoverType) {
         Location location = locationService.createOrGetLocation(locationDto);
@@ -80,12 +85,16 @@ public class StopoverFacade {
                 .sorted(Comparator.comparingInt(s -> s.getFare() != null ? s.getFare().getBaseFigure() : 0))
                 .toList();
 
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(sortedStopoverList);
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
         int prevBaseFigure = 0;
         for(Stopover stopover : sortedStopoverList) {
             if (stopover.getStopoverType().equals(LocationType.START)) continue;
 
             int baseFare = stopover.getFare().getBaseFigure();
-            List<PaymentStatus> psList = stopover.getPaymentStatusList();
+            List<PaymentStatus> psList = paymentStatusMap.getOrDefault(stopover.getId(), List.of());
             int numDropOff = psList.size();
             if (numDropOff == 0) continue;
 
@@ -100,12 +109,13 @@ public class StopoverFacade {
             }
 
             for (PaymentStatus ps : psList) {
+                PartyMember partyMember = ps.getPartyMember();
                 // 최종 결산자는 항상 목적지에 내린다고 가정. 따라서 목적지에서만 Role를 검사하면 됨
                 if(stopover.getStopoverType().equals(LocationType.DESTINATION)){
-                    PartyMemberRole memberRole = ps.getPartyMember().getMemberRole();
+                    PartyMemberRole memberRole = partyMember.getMemberRole();
                     switch (memberRole) {
                         case HOST:
-                            if (!ps.getPartyMember().getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) break;
+                            if (!partyMember.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) break;
                         case BOOKKEEPER:
                             ps.setFinalFigure(expectFinalFare);
                             ps.setPaid(true);
