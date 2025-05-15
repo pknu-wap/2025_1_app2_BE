@@ -122,7 +122,6 @@ public class PartyFacade {
         if (participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         PartyMember participantMember = partyMemberService.getPartyMemberByPartyAndMember(party, participant);
-        if (participantMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
         // 3. Stopover 찾거나 생성
         Stopover stopover = stopoverFacade.findOrCreateStopover(party, requestDto.getLocation());
@@ -158,7 +157,6 @@ public class PartyFacade {
             if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
             PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, member);
-            if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
             isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
         }
