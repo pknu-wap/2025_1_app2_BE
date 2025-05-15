@@ -1,10 +1,13 @@
 package com.wap.app2.gachitayo.service.party;
 
+import com.wap.app2.gachitayo.Enum.AdditionalRole;
 import com.wap.app2.gachitayo.Enum.PartyMemberRole;
 import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
+import com.wap.app2.gachitayo.error.exception.ErrorCode;
+import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.repository.party.PartyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,6 +47,23 @@ public class PartyMemberService {
         List<PartyMember> partyMemberList = partyMemberRepository.findAllByParty(party);
         return partyMemberList.stream().map(pm ->
                 toResponseDto(pm.getMember(), pm.getMemberRole())).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public PartyMember getPartyMemberById(Long id) {
+        return partyMemberRepository.findById(id).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_MEMBER_NOT_FOUND));
+    }
+
+    @Transactional
+    public void changePartyMemberRole(PartyMember partyMember, PartyMemberRole role) {
+        partyMember.setMemberRole(role);
+        partyMemberRepository.save(partyMember);
+    }
+
+    @Transactional
+    public void changeAdditionalRole(PartyMember partyMember, AdditionalRole role) {
+        partyMember.setAdditionalRole(role);
+        partyMemberRepository.save(partyMember);
     }
 
     private PartyMemberResponseDto toResponseDto(Member member, PartyMemberRole role) {

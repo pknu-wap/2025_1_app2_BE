@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,10 +46,12 @@ public class Party {
     private GenderOption genderOption = GenderOption.MIXED;
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 5)
     @Builder.Default
     private List<Stopover> stopovers = new ArrayList<>();
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL)
+    @BatchSize(size = 4)
     @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
 

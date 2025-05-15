@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface PartyRepository extends JpaRepository<Party, Long> {
     @Query(value = """
@@ -23,4 +24,11 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
     @Transactional
     @Query("DELETE FROM Party p WHERE p.expiredAt <= :now")
     int deleteExpiredParties(@Param("now") LocalDateTime now);
+
+    @Query("""
+    SELECT DISTINCT p FROM Party p
+    JOIN FETCH p.stopovers s
+    WHERE p.id = :partyId
+    """)
+    Optional<Party> findPartyWithStopovers(@Param("partyId") Long partyId);
 }
