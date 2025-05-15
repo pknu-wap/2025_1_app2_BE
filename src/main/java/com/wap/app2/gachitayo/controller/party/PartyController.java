@@ -50,4 +50,9 @@ public class PartyController {
     public ResponseEntity<?> reflectCalculatedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody List<FareRequestDto> requestDtoList) {
         return partyFacade.reflectCalculatedFare(id, memberDetails.getUsername(), requestDtoList);
     }
+
+    @PatchMapping("/{id}/fare/confirm")
+    public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
+        return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
+    }
 }
