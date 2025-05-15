@@ -28,6 +28,12 @@ public class PaymentStatus {
     private Stopover stopover;
 
     @NotNull
+    @Setter
+    @Builder.Default
+    private int finalFigure = 0;
+
+    @NotNull
+    @Setter
     @Builder.Default
     private boolean isPaid = false;
 }

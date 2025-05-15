@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface PartyRepository extends JpaRepository<Party, Long> {
     @Query(value = """
@@ -15,4 +16,11 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
         WHERE s.stopover_type = 'DESTINATION' AND ST_Distance_Sphere(point(l.longitude, l.latitude), point(:lng, :lat)) <= :radius
         """, nativeQuery = true)
     List<Party> findPartiesWithRadius(@Param("lat") double lat, @Param("lng") double lng, @Param("radius") double radius);
+
+    @Query("""
+    SELECT DISTINCT p FROM Party p
+    JOIN FETCH p.stopovers s
+    WHERE p.id = :partyId
+    """)
+    Optional<Party> findPartyWithStopovers(@Param("partyId") Long partyId);
 }
