@@ -30,6 +30,12 @@ public class PaymentStatusService {
     }
 
     @Transactional
+    public void updatePaidStatus(PaymentStatus targetPaymentStatus, boolean paid) {
+        targetPaymentStatus.setPaid(paid);
+        paymentStatusRepository.save(targetPaymentStatus);
+    }
+
+    @Transactional
     public boolean updateStopover(PartyMember partyMember, Stopover newStopover) {
         PaymentStatus existingPaymentStatus = paymentStatusRepository.findByPartyMember(partyMember);
         if(existingPaymentStatus == null) return false;
