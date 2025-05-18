@@ -122,7 +122,6 @@ public class PartyFacade {
         if (participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         PartyMember participantMember = partyMemberService.getPartyMemberByPartyAndMember(party, participant);
-        if (participantMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
         // 3. Stopover 찾거나 생성
         Stopover stopover = stopoverFacade.findOrCreateStopover(party, requestDto.getLocation());
@@ -158,7 +157,6 @@ public class PartyFacade {
             if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
             PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, member);
-            if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
             isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
         }
@@ -210,7 +208,6 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
-    @Transactional
     public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
         Party party = verifyPartyAndPartyMember(hostEmail, partyId, PartyMemberRole.HOST);
 
@@ -234,7 +231,6 @@ public class PartyFacade {
         return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
     }
 
-    @Transactional
     public ResponseEntity<?> reflectCalculatedFare(Long partyId, String bookkeeperEmail, List<FareRequestDto> requestDtoList) {
         Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
 
@@ -248,6 +244,34 @@ public class PartyFacade {
         Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
                 .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
 
+        return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
+    }
+
+    public ResponseEntity<?> reflectPayment(Long partyId, String bookkeeperEmail, FareConfirmRequestDto requestDto) {
+        Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
+
+        Stopover targetStopover = party.getStopovers().stream()
+                .filter(s -> s.getId().equals(requestDto.getStopoverId())).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
+        PaymentStatus targetStatus = targetStopover.getPaymentStatusList().stream()
+                .filter(ps -> ps.getPartyMember().getId().equals(requestDto.getPartyMemberId())).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.PAYMENT_STATUS_NOT_FOUND));
+
+        if (targetStatus.isPaid()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        paymentStatusService.updatePaidStatus(targetStatus, true);
+
+        // Party + Stopover
+        Party updatedParty = partyService.findPartyWithStopovers(partyId);
+        // PaymentStatus + PartyMember + Member
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
+        return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
+    }
+
+    private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {
         List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
                 .filter(stopover -> !stopover.getStopoverType().equals(LocationType.START))
                 .flatMap(stopover -> {
@@ -315,7 +339,6 @@ public class PartyFacade {
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
-        if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
         validatePartyMemberRole(partyMember, role);
 
         return party;

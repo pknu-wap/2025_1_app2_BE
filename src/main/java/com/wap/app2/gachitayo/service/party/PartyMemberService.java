@@ -39,7 +39,7 @@ public class PartyMemberService {
 
     @Transactional(readOnly = true)
     public PartyMember getPartyMemberByPartyAndMember(Party party, Member member) {
-        return partyMemberRepository.findByPartyAndMember(party, member);
+        return partyMemberRepository.findByPartyAndMember(party, member).orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +51,7 @@ public class PartyMemberService {
 
     @Transactional(readOnly = true)
     public PartyMember getPartyMemberById(Long id) {
-        return partyMemberRepository.findById(id).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_MEMBER_NOT_FOUND));
+        return partyMemberRepository.findById(id).orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
     }
 
     @Transactional
