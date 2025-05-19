@@ -23,4 +23,26 @@ public interface PartyRepository extends JpaRepository<Party, Long> {
     WHERE p.id = :partyId
     """)
     Optional<Party> findPartyWithStopovers(@Param("partyId") Long partyId);
+
+    @Query("""
+    SELECT DISTINCT p FROM PartyMember pm
+    JOIN pm.party p
+    WHERE pm.member.id = :memberId
+    """)
+    List<Party> findPartiesByMember(@Param("memberId") Long memberId);
+
+    @Query("""
+    SELECT DISTINCT p FROM Party p
+    LEFT JOIN FETCH p.stopovers
+    WHERE p IN :parties
+    """)
+    List<Party> fetchStopoversForParties(@Param("parties") List<Party> parties);
+
+    @Query("""
+    SELECT DISTINCT p FROM Party p
+    LEFT JOIN FETCH p.partyMemberList pm
+    LEFT JOIN FETCH pm.member
+    WHERE p IN :parties
+    """)
+    List<Party> fetchPartyMembersForParties(@Param("parties") List<Party> parties);
 }
