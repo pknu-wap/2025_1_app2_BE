@@ -45,8 +45,7 @@ public class PartyMemberService {
     @Transactional(readOnly = true)
     public List<PartyMemberResponseDto> getPartyMemberResponseDtoList(Party party) {
         List<PartyMember> partyMemberList = partyMemberRepository.findAllByParty(party);
-        return partyMemberList.stream().map(pm ->
-                toResponseDto(pm.getMember(), pm.getMemberRole())).toList();
+        return partyMemberList.stream().map(this::toResponseDto).toList();
     }
 
     @Transactional(readOnly = true)
@@ -66,13 +65,15 @@ public class PartyMemberService {
         partyMemberRepository.save(partyMember);
     }
 
-    private PartyMemberResponseDto toResponseDto(Member member, PartyMemberRole role) {
+    private PartyMemberResponseDto toResponseDto(PartyMember partyMember) {
+        Member member = partyMember.getMember();
         return PartyMemberResponseDto.builder()
-                .id(member.getId())
+                .id(partyMember.getId())
                 .name(member.getName())
                 .email(member.getEmail())
                 .gender(member.getGender())
-                .role(role)
+                .role(partyMember.getMemberRole())
+                .additionalRole(partyMember.getAdditionalRole())
                 .build();
     }
 }
