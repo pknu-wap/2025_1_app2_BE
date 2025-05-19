@@ -16,6 +16,11 @@ import java.util.List;
 public class PartyController {
     private final PartyFacade partyFacade;
 
+    @GetMapping
+    public ResponseEntity<?> getMyParties(@AuthenticationPrincipal MemberDetails memberDetails) {
+        return partyFacade.getMyPartyList(memberDetails.getUsername());
+    }
+
     @PostMapping
     public ResponseEntity<?> createParty(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartyCreateRequestDto requestDto) {
         return partyFacade.createParty(memberDetails.getUsername(), requestDto);
