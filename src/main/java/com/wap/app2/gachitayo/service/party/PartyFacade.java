@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,7 +73,7 @@ public class PartyFacade {
         // 7. 파티 저장
         partyService.saveParty(party);
 
-        return ResponseEntity.ok().body(toResponseDto(party, host, start, dest));
+        return ResponseEntity.ok().body(toPartyCreateResponseDto(party, host, start, dest));
     }
 
     public ResponseEntity<?> attendParty(String email, Long partyId) {
@@ -208,6 +209,16 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getMyPartyList(String email) {
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        List<Party> partyList = partyService.findPartiesWithDetailsByMember(member.getId());
+        List<PartyResponseDto> responseDtoList = partyList.stream().map(this::toPartyResponseDto).toList();
+        return ResponseEntity.ok(responseDtoList);
+    }
+
     public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
         Party party = verifyPartyAndPartyMember(hostEmail, partyId, PartyMemberRole.HOST);
 
@@ -295,7 +306,19 @@ public class PartyFacade {
                 .build();
     }
 
-    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
+    private PartyResponseDto toPartyResponseDto(Party party) {
+        return PartyResponseDto.builder()
+                .id(party.getId())
+                .members(partyMemberService.getPartyMemberResponseDtoList(party))
+                .stopovers(party.getStopovers().stream().map(stopoverMapper::toDto).toList())
+                .radius(party.getAllowRadius())
+                .maxPeople(party.getMaxPeople())
+                .currentPeople(party.getPartyMemberList().size())
+                .genderOption(party.getGenderOption())
+                .build();
+    }
+
+    private PartyCreateResponseDto toPartyCreateResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
                 .hostName(member.getName())
