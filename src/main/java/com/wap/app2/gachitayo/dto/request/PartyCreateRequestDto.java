@@ -2,7 +2,7 @@ package com.wap.app2.gachitayo.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wap.app2.gachitayo.Enum.RequestGenderOption;
-import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
+import com.wap.app2.gachitayo.dto.datadto.LocationDto;
 import lombok.*;
 
 @Getter
@@ -11,9 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 public class PartyCreateRequestDto {
     @JsonProperty("party_start")
-    private StopoverDto startLocation;
+    private LocationDto startLocation;
     @JsonProperty("party_destination")
-    private StopoverDto destination;
+    private LocationDto destinationLocation;
     @JsonProperty("party_radius")
     private Double radius;
     @JsonProperty("party_max_person")

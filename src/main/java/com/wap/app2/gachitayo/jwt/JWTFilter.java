@@ -1,10 +1,10 @@
 package com.wap.app2.gachitayo.jwt;
 
-import com.wap.app2.gachitayo.domain.Member.Member;
-import com.wap.app2.gachitayo.domain.Member.MemberDetails;
+import com.wap.app2.gachitayo.domain.member.Member;
+import com.wap.app2.gachitayo.domain.member.MemberDetails;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
-import com.wap.app2.gachitayo.repository.auth.MemberRepository;
+import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

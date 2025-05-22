@@ -7,6 +7,7 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,7 @@ public class Stopover {
     private Fare fare;
 
     @OneToMany(mappedBy = "stopover", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 4)
     @Builder.Default
     private List<PaymentStatus> paymentStatusList = new ArrayList<>();
 

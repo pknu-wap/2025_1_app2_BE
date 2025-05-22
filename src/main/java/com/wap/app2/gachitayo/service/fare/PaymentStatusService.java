@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class PaymentStatusService {
@@ -20,6 +22,17 @@ public class PaymentStatusService {
                 .stopover(stopover)
                 .build();
         return paymentStatusRepository.save(paymentStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaymentStatus> findPaymentStatusListByStopoverIn(List<Stopover> stopoverList) {
+        return paymentStatusRepository.findAllWithPartyMemberAndMemberByStopoverIn(stopoverList);
+    }
+
+    @Transactional
+    public void updatePaidStatus(PaymentStatus targetPaymentStatus, boolean paid) {
+        targetPaymentStatus.setPaid(paid);
+        paymentStatusRepository.save(targetPaymentStatus);
     }
 
     @Transactional

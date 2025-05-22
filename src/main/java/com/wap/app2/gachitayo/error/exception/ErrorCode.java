@@ -26,14 +26,21 @@ public enum ErrorCode {
 
     //Party
     PARTY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "PARTY-404-1", "존재하지 않는 파티입니다."),
-    EXCEED_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "인원이 가득 찬 파티입니다."),
+    EXCEED_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-1", "인원이 가득 찬 파티입니다."),
     ALREADY_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "이미 속한 파티입니다."),
     NOT_MATCH_GENDER_OPTION(HttpStatus.CONFLICT.value(), "PARTY-409-3", "파티 성별 옵션에 맞지 않는 유저입니다."),
-    NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-4", "해당 파티의 유저가 아닙니다."),
-    NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY_403-5", "해당 파티의 방장이 아닙니다."),
+    NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-4", "해당 파티의 유저가 아니거나 찾을 수 없습니다."),
+    NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY-403-5", "해당 파티의 방장이 아닙니다."),
+    NOT_BOOKKEEPER(HttpStatus.FORBIDDEN.value(), "PARTY-403-6", "해당 파티의 최종 결산자가 아닙니다."),
 
     //Stopover
     STOPOVER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "STOPOVER-404-1", "존재하지 않는 경유지입니다."),
+
+    //PaymentStatus
+    PAYMENT_STATUS_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "PAYMENT_STATUS-404-1", "해당 유저에 대한 결제 정보를 찾을 수 없습니다."),
+
+    //Review
+    ALREADY_REVIEW(HttpStatus.CONFLICT.value(), "REVIEW-409-1", "이미 리뷰를 작성하였습니다."),
 
     INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error");
 

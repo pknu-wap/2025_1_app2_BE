@@ -1,21 +1,25 @@
 package com.wap.app2.gachitayo.controller.party;
 
-import com.wap.app2.gachitayo.domain.Member.MemberDetails;
-import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
+import com.wap.app2.gachitayo.domain.member.MemberDetails;
+import com.wap.app2.gachitayo.dto.request.*;
 import com.wap.app2.gachitayo.service.party.PartyFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/party")
 @RequiredArgsConstructor
 public class PartyController {
     private final PartyFacade partyFacade;
+
+    @GetMapping
+    public ResponseEntity<?> getMyParties(@AuthenticationPrincipal MemberDetails memberDetails) {
+        return partyFacade.getMyPartyList(memberDetails.getUsername());
+    }
 
     @PostMapping
     public ResponseEntity<?> createParty(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartyCreateRequestDto requestDto) {
@@ -40,5 +44,20 @@ public class PartyController {
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateStopover(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody StopoverUpdateDto updateDto) {
         return partyFacade.updateStopover(memberDetails.getUsername(), id, updateDto);
+    }
+
+    @PatchMapping("/{partyId}/member/{partyMemberId}/bookkeeper")
+    public ResponseEntity<?> electBookkeeper(@PathVariable("partyId") Long partyId, @PathVariable("partyMemberId") Long partyMemberId, @AuthenticationPrincipal MemberDetails memberDetails) {
+        return partyFacade.electBookkeeper(partyId, memberDetails.getUsername(), partyMemberId);
+    }
+
+    @PostMapping("/{id}/fare")
+    public ResponseEntity<?> reflectCalculatedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody List<FareRequestDto> requestDtoList) {
+        return partyFacade.reflectCalculatedFare(id, memberDetails.getUsername(), requestDtoList);
+    }
+
+    @PatchMapping("/{id}/fare/confirm")
+    public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
+        return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
     }
 }

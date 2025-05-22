@@ -1,19 +1,13 @@
 package com.wap.app2.gachitayo.service.party;
 
 import com.wap.app2.gachitayo.Enum.*;
-import com.wap.app2.gachitayo.domain.Member.Member;
+import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
-import com.wap.app2.gachitayo.dto.request.PartyCreateRequestDto;
-import com.wap.app2.gachitayo.dto.request.PartySearchRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverAddRequestDto;
-import com.wap.app2.gachitayo.dto.request.StopoverUpdateDto;
-import com.wap.app2.gachitayo.dto.response.PartyCreateResponseDto;
-import com.wap.app2.gachitayo.dto.response.PartyMemberResponseDto;
-import com.wap.app2.gachitayo.dto.response.PartyResponseDto;
-import com.wap.app2.gachitayo.dto.response.StopoverAndPartyMemberResponseDto;
+import com.wap.app2.gachitayo.dto.request.*;
+import com.wap.app2.gachitayo.dto.response.*;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.mapper.StopoverMapper;
@@ -26,8 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,10 +45,10 @@ public class PartyFacade {
         
         // 2. 출발/목적지 생성
         Stopover start = stopoverFacade.createStopover(
-                requestDto.getStartLocation().getLocation(), LocationType.START
+                requestDto.getStartLocation(), LocationType.START
         );
         Stopover dest = stopoverFacade.createStopover(
-                requestDto.getDestination().getLocation(), LocationType.DESTINATION
+                requestDto.getDestinationLocation(), LocationType.DESTINATION
         );
 
         // 3. 파티 생성
@@ -77,7 +73,7 @@ public class PartyFacade {
         // 7. 파티 저장
         partyService.saveParty(party);
 
-        return ResponseEntity.ok().body(toResponseDto(party, host, start, dest));
+        return ResponseEntity.ok().body(toPartyCreateResponseDto(party, host, start, dest));
     }
 
     public ResponseEntity<?> attendParty(String email, Long partyId) {
@@ -111,6 +107,7 @@ public class PartyFacade {
                                         .email(pm.getMember().getEmail())
                                         .gender(pm.getMember().getGender())
                                         .role(pm.getMemberRole())
+                                        .additionalRole(pm.getAdditionalRole())
                                         .build()).toList()
         ));
     }
@@ -119,14 +116,13 @@ public class PartyFacade {
         log.info("\n===== 파티 내 하차 지점 추가 시도 =====");
 
         // 1. 파티, HOST 검증
-        Party party = verificationPartyAndHost(email, partyId);
+        Party party = verifyPartyAndPartyMember(email, partyId, PartyMemberRole.HOST);
 
         // 2. 추가할 참가자 Member 검증
         Member participant = memberService.getUserByEmail(requestDto.getMemberEmail());
         if (participant == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         PartyMember participantMember = partyMemberService.getPartyMemberByPartyAndMember(party, participant);
-        if (participantMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
         // 3. Stopover 찾거나 생성
         Stopover stopover = stopoverFacade.findOrCreateStopover(party, requestDto.getLocation());
@@ -144,7 +140,7 @@ public class PartyFacade {
         log.info("\n===== 파티 내 하차 지점 수정 시도 =====");
 
         // 1. 파티, HOST 검증
-        Party party = verificationPartyAndHost(email, partyId);
+        Party party = verifyPartyAndPartyMember(email, partyId, PartyMemberRole.HOST);
 
         // 2. Stopover 조회
         Stopover stopover = party.getStopovers().stream()
@@ -162,7 +158,6 @@ public class PartyFacade {
             if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
             PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, member);
-            if (partyMember == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
 
             isUpdatedPaymentStatus = paymentStatusService.updateStopover(partyMember, stopover);
         }
@@ -214,7 +209,116 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
-    private PartyCreateResponseDto toResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getMyPartyList(String email) {
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        List<Party> partyList = partyService.findPartiesWithDetailsByMember(member.getId());
+        List<PartyResponseDto> responseDtoList = partyList.stream().map(this::toPartyResponseDto).toList();
+        return ResponseEntity.ok(responseDtoList);
+    }
+
+    public ResponseEntity<?> electBookkeeper(Long partyId, String hostEmail, Long targetPartyMemberId) {
+        Party party = verifyPartyAndPartyMember(hostEmail, partyId, PartyMemberRole.HOST);
+
+        PartyMember targetPartyMember = partyMemberService.getPartyMemberById(targetPartyMemberId);
+
+        for(PartyMember pm : party.getPartyMemberList()) {
+            if (pm.getMemberRole().equals(PartyMemberRole.HOST) && pm.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) {
+                partyMemberService.changeAdditionalRole(pm, AdditionalRole.NONE);
+            }
+            else if (pm.getMemberRole().equals(PartyMemberRole.BOOKKEEPER)) {
+                partyMemberService.changePartyMemberRole(pm, PartyMemberRole.MEMBER);
+            }
+        }
+
+        if(targetPartyMember.getMemberRole().equals(PartyMemberRole.HOST)) {
+            partyMemberService.changeAdditionalRole(targetPartyMember, AdditionalRole.BOOKKEEPER);
+        } else if (targetPartyMember.getMemberRole().equals(PartyMemberRole.MEMBER)) {
+            partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
+        }
+
+        return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
+    }
+
+    public ResponseEntity<?> reflectCalculatedFare(Long partyId, String bookkeeperEmail, List<FareRequestDto> requestDtoList) {
+        Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
+
+        stopoverFacade.calculateFinalFare(requestDtoList, party.getStopovers());
+        partyService.saveParty(party);
+
+        // Party + Stopover
+        Party updatedParty = partyService.findPartyWithStopovers(partyId);
+        // PaymentStatus + PartyMember + Member
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
+        return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
+    }
+
+    public ResponseEntity<?> reflectPayment(Long partyId, String bookkeeperEmail, FareConfirmRequestDto requestDto) {
+        Party party = verifyPartyAndPartyMember(bookkeeperEmail, partyId, PartyMemberRole.BOOKKEEPER);
+
+        Stopover targetStopover = party.getStopovers().stream()
+                .filter(s -> s.getId().equals(requestDto.getStopoverId())).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.STOPOVER_NOT_FOUND));
+        PaymentStatus targetStatus = targetStopover.getPaymentStatusList().stream()
+                .filter(ps -> ps.getPartyMember().getId().equals(requestDto.getPartyMemberId())).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.PAYMENT_STATUS_NOT_FOUND));
+
+        if (targetStatus.isPaid()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        paymentStatusService.updatePaidStatus(targetStatus, true);
+
+        // Party + Stopover
+        Party updatedParty = partyService.findPartyWithStopovers(partyId);
+        // PaymentStatus + PartyMember + Member
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
+        return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
+    }
+
+    private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {
+        List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
+                .filter(stopover -> !stopover.getStopoverType().equals(LocationType.START))
+                .flatMap(stopover -> {
+                    List<PaymentStatus> psList = paymentStatusMap.getOrDefault(stopover.getId(), List.of());
+                    return psList.stream()
+                            .map(ps -> FinalPaymentStatusResponseDto.builder()
+                                    .partyMemberInfo(toPartyMemberResponseDto(ps.getPartyMember()))
+                                    .paymentStatus(toPaymentStatusResponseDto(stopover, ps))
+                                    .build());
+                })
+                .toList();
+        return ResponseEntity.ok(responseDtoList);
+    }
+
+    private PaymentStatusResponseDto toPaymentStatusResponseDto(Stopover stopover, PaymentStatus paymentStatus) {
+        return PaymentStatusResponseDto.builder()
+                .stopoverId(stopover.getId())
+                .baseFare(stopover.getFare().getBaseFigure())
+                .finalFare(paymentStatus.getFinalFigure())
+                .isPaid(paymentStatus.isPaid())
+                .build();
+    }
+
+    private PartyResponseDto toPartyResponseDto(Party party) {
+        return PartyResponseDto.builder()
+                .id(party.getId())
+                .members(partyMemberService.getPartyMemberResponseDtoList(party))
+                .stopovers(party.getStopovers().stream().map(stopoverMapper::toDto).toList())
+                .radius(party.getAllowRadius())
+                .maxPeople(party.getMaxPeople())
+                .currentPeople(party.getPartyMemberList().size())
+                .genderOption(party.getGenderOption())
+                .build();
+    }
+
+    private PartyCreateResponseDto toPartyCreateResponseDto(Party partyEntity, Member member, Stopover startStopover, Stopover destStopover) {
         return PartyCreateResponseDto.builder()
                 .id(partyEntity.getId())
                 .hostName(member.getName())
@@ -232,35 +336,47 @@ public class PartyFacade {
                 .map(s -> StopoverAndPartyMemberResponseDto.builder()
                         .stopover(stopoverMapper.toDto(s))
                         .partyMembers(
-                                s.getPaymentStatusList().stream()
-                                        .map(ps -> {
-                                            PartyMember partyMember = ps.getPartyMember();
-                                            Member member = partyMember.getMember();
-                                            return PartyMemberResponseDto.builder()
-                                                    .id(partyMember.getId())
-                                                    .name(member.getName())
-                                                    .email(member.getEmail())
-                                                    .gender(member.getGender())
-                                                    .role(partyMember.getMemberRole())
-                                                    .build();
-                                        }).toList()
+                            s.getPaymentStatusList().stream()
+                                .map(ps -> toPartyMemberResponseDto(ps.getPartyMember())
+                                ).toList()
                         )
                         .build()
                 ).toList();
     }
 
-    private Party verificationPartyAndHost(String email, Long partyId) {
-        Party party = partyService.findPartyById(partyId);
+    private PartyMemberResponseDto toPartyMemberResponseDto(PartyMember partyMember) {
+        return PartyMemberResponseDto.builder()
+                .id(partyMember.getId())
+                .name(partyMember.getMember().getName())
+                .email(partyMember.getMember().getEmail())
+                .gender(partyMember.getMember().getGender())
+                .role(partyMember.getMemberRole())
+                .additionalRole(partyMember.getAdditionalRole())
+                .build();
+    }
 
-        // HOST 검증
+    private Party verifyPartyAndPartyMember(String email, Long partyId, PartyMemberRole role) {
+        Party party = partyService.findPartyWithStopovers(partyId);
+
         Member hostMember = memberService.getUserByEmail(email);
         if (hostMember == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
-        PartyMember host = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
-        if (host == null) throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
-        if (!host.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+        PartyMember partyMember = partyMemberService.getPartyMemberByPartyAndMember(party, hostMember);
+        validatePartyMemberRole(partyMember, role);
 
         return party;
+    }
+
+    private void validatePartyMemberRole(PartyMember partyMember, PartyMemberRole requiredRole) {
+        switch (requiredRole) {
+            case HOST -> {
+                if(!partyMember.getMemberRole().equals(PartyMemberRole.HOST)) throw new TagogayoException(ErrorCode.NOT_HOST);
+            }
+            case BOOKKEEPER -> {
+                if(partyMember.getMemberRole().equals(PartyMemberRole.MEMBER)) throw new TagogayoException(ErrorCode.NOT_BOOKKEEPER);
+                else if(partyMember.getMemberRole().equals(PartyMemberRole.HOST) && !partyMember.getAdditionalRole().equals(AdditionalRole.BOOKKEEPER)) throw new TagogayoException(ErrorCode.NOT_BOOKKEEPER);
+            }
+        }
     }
 
     private void validateGenderOption(GenderOption genderOption, Gender memberGender) {

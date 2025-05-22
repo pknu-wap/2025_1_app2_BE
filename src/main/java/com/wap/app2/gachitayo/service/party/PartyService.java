@@ -24,6 +24,17 @@ public class PartyService {
         return partyRepository.save(party);
     }
 
+    public Party findPartyWithStopovers(Long id) {
+        return partyRepository.findPartyWithStopovers(id).orElseThrow(() -> new TagogayoException(ErrorCode.PARTY_NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Party> findPartiesWithDetailsByMember(Long memberId) {
+        List<Party> partyList = partyRepository.findPartiesByMember(memberId);
+        partyRepository.fetchStopoversForParties(partyList);
+        return partyRepository.fetchPartyMembersForParties(partyList);
+    }
+
     @Transactional(readOnly = true)
     public List<Party> findPartiesWithinRadius(double latitude, double longitude, double radius) {
         return partyRepository.findPartiesWithRadius(latitude, longitude, radius);
