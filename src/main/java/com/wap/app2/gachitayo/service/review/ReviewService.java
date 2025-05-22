@@ -4,6 +4,7 @@ import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.review.Review;
 import com.wap.app2.gachitayo.dto.request.ReviewMemberRequest;
+import com.wap.app2.gachitayo.dto.response.ReviewListResponse;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
@@ -43,6 +44,19 @@ public class ReviewService {
         reviewRepository.save(review);
 
         return ResponseEntity.ok(Map.of("message", "리뷰 작성이 되었습니다."));
+    }
+
+    public ResponseEntity<?> getMemberReview(String email) {
+        Member member = findMemberByEmail(email);
+
+        List<ReviewListResponse.MemberReviewResponse> reviewList = member.getReceivedReviews().stream()
+                .map(ReviewListResponse.MemberReviewResponse::from)
+                .toList();
+
+        return ResponseEntity.ok(new ReviewListResponse(
+                reviewList.size(),
+                reviewList
+        ));
     }
 
     public double getReviewRateByMember(Long memberId) {

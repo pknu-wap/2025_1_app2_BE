@@ -20,4 +20,9 @@ public class ReviewController {
     public ResponseEntity<?> addMemberReview(@PathVariable String email, @AuthenticationPrincipal MemberDetails memberDetails, @RequestBody @Validated ReviewMemberRequest request) {
         return reviewService.addMemberReview(memberDetails.getUsername(), email, request);
     }
+
+    @GetMapping
+    public ResponseEntity<?> getMemberReview(@PathVariable String email) {
+        return reviewService.getMemberReview(email);
+    }
 }
