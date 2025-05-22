@@ -41,8 +41,10 @@ public enum ErrorCode {
 
     //Review
     ALREADY_REVIEW(HttpStatus.CONFLICT.value(), "REVIEW-409-1", "이미 리뷰를 작성하였습니다."),
+    TAG_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "REVIEW-409-2", "존재하지 않는 태그입니다."),
 
-    INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error");
+    INTERNAL_SERVER_ERROR(500, "SERVER-500-1", "Internal Server Error"),
+    ;
 
     private final int status;
     private final String code;
