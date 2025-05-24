@@ -15,8 +15,12 @@ public enum ErrorCode {
     INVALID_REQUEST(400, "MEMBER-400-2", "잘못된 요청입니다."),
     NOT_MATCH_EMAIL(400, "MEMBER-400-3", "이메일 주소가 잘못 되었습니다."),
     INVALID_TOKEN(400, "MEMBER-400-4", "idToken 검증에 실패하였습니다."),
+    EXPIRED_SMS_VERIFIED(400, "MEMBER-400-5", "인증이 만료되었습니다."),
     MEMBER_NOT_LOGIN(403, "USER-403-1", "로그인되어 있지 않습니다."),
     MEMBER_NOT_FOUND(404, "MEMBER-404-1", "회원을 조회할 수 없습니다."),
+
+    //SMS
+    NOT_VERIFIED_SMS(HttpStatus.BAD_REQUEST.value(), "SMS-400-1", "전화번호 인증에 실패했습니다."),
 
     //JWT
     INVALID_JWT(403, "TOKEN-403-1", "잘못된 토큰으로 접근하였습니다."),
