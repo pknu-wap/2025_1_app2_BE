@@ -5,6 +5,8 @@ import com.wap.app2.gachitayo.Enum.GenderOption;
 import com.wap.app2.gachitayo.dto.datadto.StopoverDto;
 import lombok.Builder;
 
+import java.time.LocalDateTime;
+
 @Builder
 public record PartyCreateResponseDto(
         @JsonProperty("party_id")
@@ -22,6 +24,8 @@ public record PartyCreateResponseDto(
         @JsonProperty("party_max_people")
         Integer maxPeople,
         @JsonProperty("party_option")
-        GenderOption genderOption
+        GenderOption genderOption,
+        @JsonProperty("party_create_time")
+        LocalDateTime createdAt
 ) {
 }

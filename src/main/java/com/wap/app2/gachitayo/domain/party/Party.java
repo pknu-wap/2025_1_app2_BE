@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,6 +34,12 @@ public class Party {
     @Builder.Default
     private double allowRadius = 0.0; // m 단위, 0이면 같은 목적지
 
+    @Column(name="create_time")
+    private LocalDateTime createdAt;
+
+    @Column(name="expire_time")
+    private LocalDateTime expiredAt;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     @Builder.Default
@@ -47,6 +54,14 @@ public class Party {
     @BatchSize(size = 4)
     @Builder.Default
     private List<PartyMember> partyMemberList = new ArrayList<>();
+
+    @PrePersist
+    public void setTime() {
+        if(expiredAt == null && createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+            this.expiredAt = this.createdAt.plusMinutes(30);
+        }
+    }
 
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
