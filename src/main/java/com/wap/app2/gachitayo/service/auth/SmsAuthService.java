@@ -32,7 +32,7 @@ public class SmsAuthService {
     public ResponseEntity<?> getSmsSessionKey() {
         String sessionKey = getSessionKey(15);
 
-        redisTemplate.opsForValue().set(sessionKey, String.valueOf(false), Duration.ofMinutes(5));
+        redisTemplate.opsForValue().set(sessionKey, "PENDING", Duration.ofMinutes(5));
 
         return ResponseEntity.ok(new SmsKeyResponse(
                 verify_email,
@@ -46,14 +46,12 @@ public class SmsAuthService {
             validatePendingSession(request.key());
 
             // 2. 메시지 검색
-            Message message = findLatestMessageContaining(request.key());
+            Address[] fromAddresses = findLatestMessageContaining(request.key());
 
-            // 3. SMS 정보 추출
-            Address[] fromAddresses = message.getFrom();
             if (fromAddresses == null || fromAddresses.length != 1) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
 
             String fromEmail = fromAddresses[0].toString();
-            if (!isNotValidEmail(fromEmail)) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
+            if (isValidEmail(fromEmail) == false) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
             SmsInfoResponse smsInfo = parseSmsInfo(fromEmail);
 
             // 4. 검증된 전화번호 저장
@@ -72,13 +70,13 @@ public class SmsAuthService {
         String phoneNumber = parts[0];
         String domain = parts[1];
 
-        if (isNotValidPhoneNumber(phoneNumber)) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
+        if (isValidPhoneNumber(phoneNumber)) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
         MobileCarrier carrier = MobileCarrier.fromDomain(domain);
 
         return new SmsInfoResponse(phoneNumber, carrier);
     }
 
-    public Message findLatestMessageContaining(String searchKey) {
+    public Address[] findLatestMessageContaining(String searchKey) {
         Folder inbox = null;
         try {
             Store store = manager.getStore();
@@ -92,7 +90,7 @@ public class SmsAuthService {
                 throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
             }
 
-            return foundMessages[foundMessages.length - 1];
+            return foundMessages[foundMessages.length - 1].getFrom();
 
         } catch (Exception e) {
             throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
@@ -129,14 +127,14 @@ public class SmsAuthService {
         redisTemplate.opsForValue().set(key, phoneNumber, sessionTimeout);
     }
 
-    private boolean isNotValidPhoneNumber(String phoneNumber) {
+    private boolean isValidPhoneNumber(String phoneNumber) {
         String numberRegex = "^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$";
         return phoneNumber.matches(numberRegex);
     }
 
-    private boolean isNotValidEmail(String email) {
-        String emailRegex = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-        return !email.matches(emailRegex);
+    private boolean isValidEmail(String email) {
+        String[] list = email.split("@");
+        return list.length == 2;
     }
 
     public String getSessionKey(int length) {
