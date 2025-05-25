@@ -28,9 +28,9 @@ public class Member {
     private String name = "익명";
 
     @NotNull
-    @Column(length = 20, unique = true)
+    @Column(length = 11, unique = true)
     @Builder.Default
-    private String phone = "010-0000-0000";
+    private String phone = "01000000000";
 
     @NotNull
     @Builder.Default

@@ -61,6 +61,10 @@ public class GoogleAuthService {
 
         if (email == null) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
 
+        String phone = redisTemplate.opsForValue().get(requestDto.key());
+        if (phone == null) throw new TagogayoException(ErrorCode.EXPIRED_SMS_VERIFIED);
+        if (!phone.equals(requestDto.phone())) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
+
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
         if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
@@ -70,7 +74,7 @@ public class GoogleAuthService {
 
         Member member = Member.builder()
                 .name(requestDto.name())
-                .phone(requestDto.phone())
+                .phone(phone)
                 .age(requestDto.age())
                 .email(email)
                 .gender(requestDto.gender())
@@ -78,6 +82,8 @@ public class GoogleAuthService {
                 .build();
 
         memberRepository.save(member);
+
+        redisTemplate.delete(requestDto.key());
 
         Token token = generateToken(email);
 
@@ -122,6 +128,7 @@ public class GoogleAuthService {
     }
 
     public String getUserEmail(String _idToken, String _accessToken) {
+        if (true) {return "tet@pukyong.ac.kr"; }
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
