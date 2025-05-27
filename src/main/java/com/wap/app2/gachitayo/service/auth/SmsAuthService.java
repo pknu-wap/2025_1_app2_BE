@@ -46,9 +46,22 @@ public class SmsAuthService {
             validatePendingSession(request.key());
 
             // 2. 메시지 검색
-            Address[] fromAddresses = findLatestMessageContaining(request.key());
+            Address[] fromAddresses = null;
 
-            if (fromAddresses == null || fromAddresses.length != 1) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
+            int retryCount = 0;
+            int maxRetries = 3; //3번 재시도..
+
+            while (retryCount < maxRetries) {
+                fromAddresses = findLatestMessageContaining(request.key());
+                if (fromAddresses != null && fromAddresses.length == 1) {
+                    break;
+                }
+                retryCount++;
+            }
+
+            // 검증
+            if (fromAddresses == null || fromAddresses.length != 1)
+                throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
 
             String fromEmail = fromAddresses[0].toString();
             if (isValidEmail(fromEmail) == false) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
@@ -70,7 +83,6 @@ public class SmsAuthService {
         String phoneNumber = parts[0];
         String domain = parts[1];
 
-        if (isValidPhoneNumber(phoneNumber)) throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
         MobileCarrier carrier = MobileCarrier.fromDomain(domain);
 
         return new SmsInfoResponse(phoneNumber, carrier);
@@ -87,13 +99,12 @@ public class SmsAuthService {
             Message[] foundMessages = inbox.search(bodyTerm);
 
             if (foundMessages.length == 0) {
-                throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
+                return null;
             }
 
             return foundMessages[foundMessages.length - 1].getFrom();
-
         } catch (Exception e) {
-            throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
+            return null;
         } finally {
             closeInboxSafely(inbox);
         }
@@ -125,11 +136,6 @@ public class SmsAuthService {
 
     public void storeVerifiedPhoneNumber(String key, String phoneNumber) {
         redisTemplate.opsForValue().set(key, phoneNumber, sessionTimeout);
-    }
-
-    private boolean isValidPhoneNumber(String phoneNumber) {
-        String numberRegex = "^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$";
-        return phoneNumber.matches(numberRegex);
     }
 
     private boolean isValidEmail(String email) {
