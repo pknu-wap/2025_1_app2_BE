@@ -289,6 +289,8 @@ public class PartyFacade {
     // 1. 참가 요청 생성
     public void requestToJoinParty(Long partyId, String email) {
         Member requester = memberService.getUserByEmail(email);
+        if (requester == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
         Party party = partyService.findPartyById(partyId);
         if (party.getPartyMemberList().size() >= party.getMaxPeople()) {
             throw new TagogayoException(ErrorCode.EXCEED_PARTY_MEMBER);
@@ -354,6 +356,24 @@ public class PartyFacade {
         webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 참가 요청이 거절되었습니다.", request.getRequester().getName() + "님의 요청을 거절하였습니다.");
     }
 
+    // 4. 참가 요청 취소
+    public void cancelJoinRequest(Long requestId, String memberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithRequester(requestId);
+        Member requester = memberService.getUserByEmail(memberEmail);
+        if (requester == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
+        if (request.getStatus() != JoinRequestStatus.PENDING) {
+            throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
+        }
+
+        request.setStatus(JoinRequestStatus.CANCELED);
+        request.setRespondedAt(LocalDateTime.now());
+
+        PartyMember host = request.getParty().getPartyMemberList().stream()
+                .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
+
+        webSocketUtils.notifyParticipants(request, host, JoinRequestStatus.CANCELED, "파티 참가 요청이 취소되었습니다.", requester.getName() + "님이 요청을 취소하였습니다.");
+    }
 
     private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {
         List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
