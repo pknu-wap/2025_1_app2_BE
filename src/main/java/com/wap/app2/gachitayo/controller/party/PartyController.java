@@ -4,10 +4,13 @@ import com.wap.app2.gachitayo.domain.member.MemberDetails;
 import com.wap.app2.gachitayo.dto.request.*;
 import com.wap.app2.gachitayo.service.party.PartyFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -59,6 +62,12 @@ public class PartyController {
     @PatchMapping("/{id}/fare/confirm")
     public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
         return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
+    }
+
+    @EventListener
+    public void handleSessionConnectedEvent(SessionConnectEvent event) {
+        Principal user = event.getUser();
+        System.out.println("✅ WebSocket 연결됨 - 사용자: " + (user != null ? user.getName() : "익명"));
     }
 
     // attendance
