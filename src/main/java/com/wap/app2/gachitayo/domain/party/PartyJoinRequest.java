@@ -27,6 +27,6 @@ public class PartyJoinRequest {
     @Enumerated(EnumType.STRING)
     private JoinRequestStatus status;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDateTime requestedAt;
+    private LocalDateTime respondedAt;
 }
