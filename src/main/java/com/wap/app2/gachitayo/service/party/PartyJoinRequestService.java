@@ -34,6 +34,11 @@ public class PartyJoinRequestService {
         return partyJoinRequestRepository.findByIdWithLock(requestId).orElseThrow(() -> new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
     }
 
+    @Transactional(readOnly = true)
+    public PartyJoinRequest findJoinRequestByIdWithRequester(Long requestId) {
+        return partyJoinRequestRepository.findByIdWithRequester(requestId).orElseThrow(() -> new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_FOUND));
+    }
+
     public PartyJoinRequest requestJoin(Member requester, Party party, JoinRequestStatus status) {
         return partyJoinRequestRepository.save(PartyJoinRequest.builder()
                 .requester(requester)

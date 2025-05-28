@@ -18,4 +18,7 @@ public interface PartyJoinRequestRepository extends JpaRepository<PartyJoinReque
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT pjr FROM PartyJoinRequest pjr JOIN FETCH pjr.party WHERE pjr.id = :id")
     Optional<PartyJoinRequest> findByIdWithLock(@Param("id") Long id);
+
+    @Query("SELECT pjr FROM PartyJoinRequest pjr JOIN FETCH pjr.requester WHERE pjr.id = :id")
+    Optional<PartyJoinRequest> findByIdWithRequester(@Param("id") Long id);
 }
