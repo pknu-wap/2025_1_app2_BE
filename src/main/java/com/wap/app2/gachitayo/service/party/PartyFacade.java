@@ -20,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +34,7 @@ public class PartyFacade {
     private final MemberService memberService;
     private final PartyMemberService partyMemberService;
     private final StopoverFacade stopoverFacade;
+    private final PartyJoinRequestService partyJoinRequestService;
 
     private final StopoverMapper stopoverMapper;
 
@@ -281,6 +281,28 @@ public class PartyFacade {
 
         return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
     }
+
+    // 1. 참가 요청 생성
+    public void requestToJoinParty(Long partyId, String email) {
+        Member requester = memberService.getUserByEmail(email);
+        Party party = partyService.findPartyById(partyId);
+        if (party.getPartyMemberList().size() >= party.getMaxPeople()) {
+            throw new TagogayoException(ErrorCode.EXCEED_PARTY_MEMBER);
+        }
+        if (partyMemberService.isInParty(party, requester)) {
+            throw new TagogayoException(ErrorCode.ALREADY_PARTY_MEMBER);
+        }
+        validateGenderOption(party.getGenderOption(), requester.getGender());
+
+        if (partyJoinRequestService.isAlreadyRequested(requester, party, JoinRequestStatus.PENDING)) {
+            throw new TagogayoException(ErrorCode.ALREADY_JOIN_REQUEST);
+        }
+
+        partyJoinRequestService.requestJoin(requester, party, JoinRequestStatus.PENDING);
+
+        // ... respond to requester and host.
+    }
+
 
     private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {
         List<FinalPaymentStatusResponseDto> responseDtoList = updatedParty.getStopovers().stream()
