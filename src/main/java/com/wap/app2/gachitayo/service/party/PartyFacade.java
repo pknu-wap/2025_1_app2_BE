@@ -305,6 +305,7 @@ public class PartyFacade {
         }
 
         PartyJoinRequest pendingRequest = partyJoinRequestService.requestJoin(requester, party, JoinRequestStatus.PENDING);
+        pendingRequest.setRespondedAt(LocalDateTime.now());
 
         PartyMember host = party.getPartyMemberList().stream()
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
