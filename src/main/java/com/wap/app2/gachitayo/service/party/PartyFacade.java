@@ -311,7 +311,7 @@ public class PartyFacade {
         Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
 
         if (request.getStatus() != JoinRequestStatus.PENDING) {
-            throw new TagogayoException(ErrorCode.ALREADY_ACCEPTED);
+            throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
         }
 
         // 요청 상태 변경
@@ -319,6 +319,21 @@ public class PartyFacade {
         request.setRespondedAt(LocalDateTime.now());
 
         partyMemberService.connectMemberWithParty(targetParty, request.getRequester(), PartyMemberRole.MEMBER);
+
+        // ... respond to requester and host.
+    }
+
+    // 3. 참가 요청 거절
+    public void rejectJoinRequest(Long requestId, String hostMemberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestById(requestId);
+        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
+
+        if (request.getStatus() != JoinRequestStatus.PENDING) {
+            throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
+        }
+
+        request.setStatus(JoinRequestStatus.REJECTED);
+        request.setRespondedAt(LocalDateTime.now());
 
         // ... respond to requester and host.
     }
