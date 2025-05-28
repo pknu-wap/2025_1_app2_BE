@@ -314,14 +314,17 @@ public class PartyFacade {
     }
 
     // 2. 참가 요청 수락
-    public void acceptJoinRequest(Long requestId, String hostMemberEmail) {
-        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithLock(requestId);
+    public void acceptJoinRequest(Long partyId, PartyJoinRequestSocketRequestDto requestDto, String hostMemberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithLock(requestDto.getRequestId());
+        if (!partyId.equals(request.getParty().getId())) {
+            throw new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_MATCH_PARTY);
+        }
 
         if (request.getStatus() != JoinRequestStatus.PENDING) {
             throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
         }
 
-        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
+        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, partyId, PartyMemberRole.HOST);
         PartyMember hostMember = targetParty.getPartyMemberList().stream()
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
@@ -341,13 +344,16 @@ public class PartyFacade {
     }
 
     // 3. 참가 요청 거절
-    public void rejectJoinRequest(Long requestId, String hostMemberEmail) {
-        PartyJoinRequest request = partyJoinRequestService.findJoinRequestById(requestId);
-        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
-
+    public void rejectJoinRequest(Long partyId, PartyJoinRequestSocketRequestDto requestDto, String hostMemberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestById(requestDto.getRequestId());
+        if (!partyId.equals(request.getParty().getId())) {
+            throw new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_MATCH_PARTY);
+        }
         if (request.getStatus() != JoinRequestStatus.PENDING) {
             throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
         }
+
+        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
 
         request.setStatus(JoinRequestStatus.REJECTED);
         request.setRespondedAt(LocalDateTime.now());
@@ -358,14 +364,20 @@ public class PartyFacade {
     }
 
     // 4. 참가 요청 취소
-    public void cancelJoinRequest(Long requestId, String memberEmail) {
-        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithRequester(requestId);
-        Member requester = memberService.getUserByEmail(memberEmail);
-        if (requester == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
-
+    public void cancelJoinRequest(Long partyId, PartyJoinRequestSocketRequestDto requestDto, String memberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithRequester(requestDto.getRequestId());
+        if (!partyId.equals(request.getParty().getId())) {
+            throw new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_MATCH_PARTY);
+        }
         if (request.getStatus() != JoinRequestStatus.PENDING) {
             throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
         }
+        if (!request.getRequester().getEmail().equals(memberEmail)) {
+            throw new TagogayoException(ErrorCode.JOIN_REQUEST_NOT_MATCH_REQUESTER);
+        }
+
+        Member requester = memberService.getUserByEmail(memberEmail);
+        if (requester == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
 
         request.setStatus(JoinRequestStatus.CANCELED);
         request.setRespondedAt(LocalDateTime.now());
