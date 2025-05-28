@@ -128,7 +128,6 @@ public class GoogleAuthService {
     }
 
     public String getUserEmail(String _idToken, String _accessToken) {
-        if (true) {return "tet@pukyong.ac.kr"; }
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                 new NetHttpTransport(),
                 new GsonFactory())
