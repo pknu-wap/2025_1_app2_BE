@@ -6,6 +6,6 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.party.PartyJoinRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PartyJoinRequestRepository extends JpaRepository<Long, PartyJoinRequest> {
+public interface PartyJoinRequestRepository extends JpaRepository<PartyJoinRequest, Long> {
     boolean existsByPartyAndRequesterAndStatus(Party party, Member requester, JoinRequestStatus status);
 }
