@@ -78,20 +78,20 @@ public class PartyController {
     }
 
     @PostMapping("/{id}/attend/accept")
-    public ResponseEntity<?> acceptToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        partyFacade.acceptJoinRequest(id, memberDetails.getUsername());
+    public ResponseEntity<?> acceptToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.acceptJoinRequest(id, requestDto, memberDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/attend/reject")
-    public ResponseEntity<?> rejectToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        partyFacade.rejectJoinRequest(id, memberDetails.getUsername());
+    public ResponseEntity<?> rejectToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.rejectJoinRequest(id, requestDto, memberDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/attend/cancel")
-    public ResponseEntity<?> cancelToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        partyFacade.cancelJoinRequest(id, memberDetails.getUsername());
+    public ResponseEntity<?> cancelToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.cancelJoinRequest(id, requestDto, memberDetails.getUsername());
         return ResponseEntity.ok().build();
     }
 }
