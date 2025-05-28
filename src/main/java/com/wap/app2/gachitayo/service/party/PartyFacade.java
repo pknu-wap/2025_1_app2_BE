@@ -15,6 +15,7 @@ import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverFacade;
 import com.wap.app2.gachitayo.service.member.MemberService;
+import com.wap.app2.gachitayo.service.websocket.WebSocketUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,7 @@ public class PartyFacade {
     private final PartyMemberService partyMemberService;
     private final StopoverFacade stopoverFacade;
     private final PartyJoinRequestService partyJoinRequestService;
+    private final WebSocketUtils webSocketUtils;
 
     private final StopoverMapper stopoverMapper;
 
@@ -300,9 +302,12 @@ public class PartyFacade {
             throw new TagogayoException(ErrorCode.ALREADY_JOIN_REQUEST);
         }
 
-        partyJoinRequestService.requestJoin(requester, party, JoinRequestStatus.PENDING);
+        PartyJoinRequest pendingRequest = partyJoinRequestService.requestJoin(requester, party, JoinRequestStatus.PENDING);
 
-        // ... respond to requester and host.
+        PartyMember host = party.getPartyMemberList().stream()
+                .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
+
+        webSocketUtils.notifyParticipants(pendingRequest, host, JoinRequestStatus.PENDING, "파티 참가 요청을 보냈습니다.", requester.getName() + "님이 해당 파티에 참가 요청을 보냈습니다.");
     }
 
     // 2. 참가 요청 수락
@@ -335,7 +340,9 @@ public class PartyFacade {
         request.setStatus(JoinRequestStatus.REJECTED);
         request.setRespondedAt(LocalDateTime.now());
 
-        // ... respond to requester and host.
+        PartyMember hostMember = targetParty.getPartyMemberList().stream().filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
+
+        webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 참가 요청이 거절되었습니다.", request.getRequester().getName() + "님의 요청을 거절하였습니다.");
     }
 
 
