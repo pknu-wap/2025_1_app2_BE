@@ -31,10 +31,10 @@ public class PartyController {
         return partyFacade.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
     }
 
-    @PostMapping("/{id}/attend")
-    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        return partyFacade.attendParty(memberDetails.getUsername(), id);
-    }
+//    @PostMapping("/{id}/attend")
+//    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+//        return partyFacade.attendParty(memberDetails.getUsername(), id);
+//    }
 
     @PostMapping("/search")
     public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
@@ -59,5 +59,30 @@ public class PartyController {
     @PatchMapping("/{id}/fare/confirm")
     public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
         return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
+    }
+
+    // attendance
+    @PostMapping("/{id}/attend")
+    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        partyFacade.requestToJoinParty(id, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/accept")
+    public ResponseEntity<?> acceptToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        partyFacade.acceptJoinRequest(id, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/reject")
+    public ResponseEntity<?> rejectToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        partyFacade.rejectJoinRequest(id, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/cancel")
+    public ResponseEntity<?> cancelToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        partyFacade.cancelJoinRequest(id, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 }
