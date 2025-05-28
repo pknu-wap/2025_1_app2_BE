@@ -42,6 +42,7 @@ public enum ErrorCode {
     ALREADY_JOIN_REQUEST(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-1", "이미 참가 요청한 파티입니다."),
     ALREADY_REQUEST_HANDLED(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-2", "이미 요청이 처리된 참가 요청입니다."),
     JOIN_REQUEST_NOT_MATCH_PARTY(HttpStatus.CONFLICT.value(),  "JOIN_REQUEST-409-3", "참가 요청 파티 id와 참가할 파티 id가 일치하지 않습니다."),
+    JOIN_REQUEST_NOT_MATCH_REQUESTER(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-4", "현재 요청자와 파티 참가 요청자가 일치하지 않습니다."),
 
     //Stopover
     STOPOVER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "STOPOVER-404-1", "존재하지 않는 경유지입니다."),
