@@ -312,20 +312,29 @@ public class PartyFacade {
 
     // 2. 참가 요청 수락
     public void acceptJoinRequest(Long requestId, String hostMemberEmail) {
-        PartyJoinRequest request = partyJoinRequestService.findJoinRequestById(requestId);
-        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestByIdWithLock(requestId);
 
         if (request.getStatus() != JoinRequestStatus.PENDING) {
             throw new TagogayoException(ErrorCode.ALREADY_REQUEST_HANDLED);
         }
 
-        // 요청 상태 변경
+        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
+        PartyMember hostMember = targetParty.getPartyMemberList().stream()
+                .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
+
+        if (targetParty.getPartyMemberList().size() >= targetParty.getMaxPeople()) {
+            webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 정원이 초과되어 자동으로 요청이 거절되었습니다.", "파티 정원 초과로 요청 수락이 진행되지 않았습니다.");
+            request.setStatus(JoinRequestStatus.AUTO_REJECTED);
+            request.setRespondedAt(LocalDateTime.now());
+            return;
+        }
+
         request.setStatus(JoinRequestStatus.ACCEPTED);
         request.setRespondedAt(LocalDateTime.now());
 
         partyMemberService.connectMemberWithParty(targetParty, request.getRequester(), PartyMemberRole.MEMBER);
 
-        // ... respond to requester and host.
+        webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.ACCEPTED, "파티 참가 요청이 수락되었습니다.", request.getRequester().getName() + "님의 요청을 수락하였습니다.");
     }
 
     // 3. 참가 요청 거절
