@@ -3,16 +3,14 @@ package com.wap.app2.gachitayo.domain.party;
 import com.wap.app2.gachitayo.Enum.JoinRequestStatus;
 import com.wap.app2.gachitayo.domain.member.Member;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Getter
 @Builder
 public class PartyJoinRequest {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,8 +23,14 @@ public class PartyJoinRequest {
     private Party party;
 
     @Enumerated(EnumType.STRING)
-    private JoinRequestStatus status;
+    @Setter
+    @Builder.Default
+    private JoinRequestStatus status = JoinRequestStatus.PENDING;
 
-    private LocalDateTime requestedAt;
+    @Setter
+    @Builder.Default
+    private LocalDateTime requestedAt = LocalDateTime.now();
+
+    @Setter
     private LocalDateTime respondedAt;
 }
