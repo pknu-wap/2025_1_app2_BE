@@ -5,6 +5,7 @@ import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.fare.PaymentStatus;
 import com.wap.app2.gachitayo.domain.location.Stopover;
 import com.wap.app2.gachitayo.domain.party.Party;
+import com.wap.app2.gachitayo.domain.party.PartyJoinRequest;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.request.*;
 import com.wap.app2.gachitayo.dto.response.*;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -299,6 +301,24 @@ public class PartyFacade {
         }
 
         partyJoinRequestService.requestJoin(requester, party, JoinRequestStatus.PENDING);
+
+        // ... respond to requester and host.
+    }
+
+    // 2. 참가 요청 수락
+    public void acceptJoinRequest(Long requestId, String hostMemberEmail) {
+        PartyJoinRequest request = partyJoinRequestService.findJoinRequestById(requestId);
+        Party targetParty = verifyPartyAndPartyMember(hostMemberEmail, request.getParty().getId(), PartyMemberRole.HOST);
+
+        if (request.getStatus() != JoinRequestStatus.PENDING) {
+            throw new TagogayoException(ErrorCode.ALREADY_ACCEPTED);
+        }
+
+        // 요청 상태 변경
+        request.setStatus(JoinRequestStatus.ACCEPTED);
+        request.setRespondedAt(LocalDateTime.now());
+
+        partyMemberService.connectMemberWithParty(targetParty, request.getRequester(), PartyMemberRole.MEMBER);
 
         // ... respond to requester and host.
     }
