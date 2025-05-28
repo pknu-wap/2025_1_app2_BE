@@ -37,6 +37,9 @@ public enum ErrorCode {
     NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY-403-5", "해당 파티의 방장이 아닙니다."),
     NOT_BOOKKEEPER(HttpStatus.FORBIDDEN.value(), "PARTY-403-6", "해당 파티의 최종 결산자가 아닙니다."),
 
+    // JoinRequest
+    ALREADY_JOIN_REQUEST(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-1", "이미 요청한 파티입니다."),
+
     //Stopover
     STOPOVER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "STOPOVER-404-1", "존재하지 않는 경유지입니다."),
 
