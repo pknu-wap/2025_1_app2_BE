@@ -1,19 +1,24 @@
 package com.wap.app2.gachitayo.service.websocket;
 
 import com.wap.app2.gachitayo.Enum.JoinRequestStatus;
+import com.wap.app2.gachitayo.Enum.PartyEventType;
 import com.wap.app2.gachitayo.domain.party.PartyJoinRequest;
 import com.wap.app2.gachitayo.domain.party.PartyMember;
 import com.wap.app2.gachitayo.dto.response.PartyJoinRequestNotificationDto;
+import com.wap.app2.gachitayo.dto.response.PartyUpdateNotificationDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
-public class WebSocketUtils {
+public class PartyJoinRequestWebSocketUtils {
+    public static final String BROADCAST_FOR_EXTERNAL = "/topic/parties/public-updates";
+    public static final String BROADCAST_FOR_INTERNAL = "/topic/party/";
+
     private final SimpMessagingTemplate messagingTemplate;
 
-    public WebSocketUtils(SimpMessagingTemplate messagingTemplate) {
+    public PartyJoinRequestWebSocketUtils(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -36,6 +41,15 @@ public class WebSocketUtils {
                 "/queue/join-request-response",
                 toHost
         );
+    }
+
+    public void broadcastPartyUpdate(Long partyId, String destination, String message, PartyEventType eventType) {
+        PartyUpdateNotificationDto dto = new PartyUpdateNotificationDto(partyId, message, eventType);
+        if (destination.equals(BROADCAST_FOR_INTERNAL)) {
+            destination = BROADCAST_FOR_INTERNAL + partyId + "/members";
+        }
+        messagingTemplate.convertAndSend(destination, dto);
+        log.info("[브로드캐스트 알림 전송] 변경된 파티 id: {}, destination: {}, payload: {}", partyId, destination, dto);
     }
 
     private PartyJoinRequestNotificationDto toPartyJoinRequestNotificationDto(PartyJoinRequest request, PartyMember host, JoinRequestStatus status, String message) {
