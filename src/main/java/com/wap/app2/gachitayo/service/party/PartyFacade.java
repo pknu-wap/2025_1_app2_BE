@@ -222,8 +222,15 @@ public class PartyFacade {
 
     // 재조회 등으로 파티 상태를 최신 상태로 유지하기 위한 조회용 메서드
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getPartyDetailsById(Long partyId) {
+    public ResponseEntity<?> getPartyDetailsById(String email, Long partyId) {
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
         Party party = partyService.findPartyWithStopovers(partyId);
+        if (!partyMemberService.isInParty(party, member)) {
+            throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        }
+
         return ResponseEntity.ok(toPartyResponseDto(party));
     }
 
@@ -311,8 +318,14 @@ public class PartyFacade {
 
     // 파티 업데이트 등으로 재조회를 위한 단순 조회용 메서드
     @Transactional(readOnly = true)
-    public ResponseEntity<?> getPaymentStatusListByPartyId(Long partyId) {
+    public ResponseEntity<?> getPaymentStatusListByPartyId(String email, Long partyId) {
+        Member member = memberService.getUserByEmail(email);
+        if (member == null) throw new TagogayoException(ErrorCode.MEMBER_NOT_FOUND);
+
         Party targetParty = partyService.findPartyWithStopovers(partyId);
+        if (!partyMemberService.isInParty(targetParty, member)) {
+            throw new TagogayoException(ErrorCode.NOT_IN_PARTY);
+        }
         List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(targetParty.getStopovers());
         Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
                 .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));

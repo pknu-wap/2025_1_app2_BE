@@ -20,8 +20,8 @@ public class PartyController {
     private final PartyFacade partyFacade;
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getParty(@PathVariable("id") Long id) {
-        return partyFacade.getPartyDetailsById(id);
+    public ResponseEntity<?> getParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        return partyFacade.getPartyDetailsById(memberDetails.getUsername(), id);
     }
 
     @GetMapping
@@ -70,8 +70,8 @@ public class PartyController {
     }
 
     @GetMapping("/{id}/final-fare")
-    public ResponseEntity<?> getFinalPaymentStatusList(@PathVariable("id") Long id) {
-        return partyFacade.getPaymentStatusListByPartyId(id);
+    public ResponseEntity<?> getFinalPaymentStatusList(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        return partyFacade.getPaymentStatusListByPartyId(memberDetails.getUsername(), id);
     }
 
     @EventListener
