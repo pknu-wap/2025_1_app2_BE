@@ -15,7 +15,7 @@ import com.wap.app2.gachitayo.mapper.StopoverMapper;
 import com.wap.app2.gachitayo.service.fare.PaymentStatusService;
 import com.wap.app2.gachitayo.service.location.StopoverFacade;
 import com.wap.app2.gachitayo.service.member.MemberService;
-import com.wap.app2.gachitayo.service.websocket.WebSocketUtils;
+import com.wap.app2.gachitayo.service.websocket.PartyJoinRequestWebSocketUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +38,7 @@ public class PartyFacade {
     private final PartyMemberService partyMemberService;
     private final StopoverFacade stopoverFacade;
     private final PartyJoinRequestService partyJoinRequestService;
-    private final WebSocketUtils webSocketUtils;
+    private final PartyJoinRequestWebSocketUtils partyJoinRequestWebSocketUtils;
 
     private final StopoverMapper stopoverMapper;
 
@@ -75,7 +75,9 @@ public class PartyFacade {
         dest.addPaymentStatus(paymentStatus);
 
         // 7. 파티 저장
-        partyService.saveParty(party);
+        Party reflectedParty = partyService.saveParty(party);
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(reflectedParty.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티가 생성되었습니다.".formatted(reflectedParty.getId()), PartyEventType.PARTY_CREATE);
 
         return ResponseEntity.ok().body(toPartyCreateResponseDto(party, host, start, dest));
     }
@@ -137,6 +139,9 @@ public class PartyFacade {
 
         log.info("\n===== 하차 지점 추가 성공 =====");
 
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티의 정보가 업데이트되었습니다.".formatted(party.getId()), PartyEventType.PARTY_UPDATE);
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "하차 지점 id: %d에 해당하는 하차 지점이 추가되었습니다. %s님이 내립니다.".formatted(party.getId(), participantMember.getMember().getName()), PartyEventType.PARTY_UPDATE);
+
         return ResponseEntity.ok(toStopoverAndPartyMemberResponseDtoList(party));
     }
 
@@ -169,6 +174,8 @@ public class PartyFacade {
         // 5. 결과 반환
         if (isUpdatedStopover || isUpdatedPaymentStatus) {
             log.info("\n===== 수정 사항 성공 반영 =====");
+            partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티의 정보가 업데이트되었습니다.".formatted(party.getId()), PartyEventType.PARTY_UPDATE);
+            partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "하차 지점 id: %d에 해당하는 하차 지점이 수정되었습니다.".formatted(stopover.getId()), PartyEventType.PARTY_UPDATE);
             return ResponseEntity.ok(toStopoverAndPartyMemberResponseDtoList(party));
         }
 
@@ -243,6 +250,9 @@ public class PartyFacade {
             partyMemberService.changePartyMemberRole(targetPartyMember, PartyMemberRole.BOOKKEEPER);
         }
 
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티의 정보가 업데이트되었습니다.".formatted(party.getId()), PartyEventType.PARTY_UPDATE);
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "%s님이 파티의 최종 결산자가 되었습니다.".formatted(targetPartyMember.getMember().getName()), PartyEventType.PARTY_UPDATE);
+
         return ResponseEntity.ok(party.getPartyMemberList().stream().map(this::toPartyMemberResponseDto).toList());
     }
 
@@ -258,6 +268,9 @@ public class PartyFacade {
         List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
         Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
                 .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티의 정보가 업데이트되었습니다.".formatted(party.getId()), PartyEventType.PARTY_UPDATE);
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "파티의 최종 정산 금액이 반영되었습니다.", PartyEventType.PARTY_UPDATE);
 
         return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
     }
@@ -282,6 +295,9 @@ public class PartyFacade {
         List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(updatedParty.getStopovers());
         Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
                 .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티의 정보가 업데이트되었습니다.".formatted(party.getId()), PartyEventType.PARTY_UPDATE);
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "%s님의 지불이 확인되었습니다.".formatted(targetStatus.getPartyMember().getMember().getName()), PartyEventType.PARTY_UPDATE);
 
         return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
     }
@@ -310,7 +326,7 @@ public class PartyFacade {
         PartyMember host = party.getPartyMemberList().stream()
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
-        webSocketUtils.notifyParticipants(pendingRequest, host, JoinRequestStatus.PENDING, "파티 참가 요청을 보냈습니다.", requester.getName() + "님이 해당 파티에 참가 요청을 보냈습니다.");
+        partyJoinRequestWebSocketUtils.notifyParticipants(pendingRequest, host, JoinRequestStatus.PENDING, "파티 참가 요청을 보냈습니다.", requester.getName() + "님이 해당 파티에 참가 요청을 보냈습니다.");
     }
 
     // 2. 참가 요청 수락
@@ -329,7 +345,7 @@ public class PartyFacade {
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
         if (targetParty.getPartyMemberList().size() >= targetParty.getMaxPeople()) {
-            webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 정원이 초과되어 자동으로 요청이 거절되었습니다.", "파티 정원 초과로 요청 수락이 진행되지 않았습니다.");
+            partyJoinRequestWebSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 정원이 초과되어 자동으로 요청이 거절되었습니다.", "파티 정원 초과로 요청 수락이 진행되지 않았습니다.");
             request.setStatus(JoinRequestStatus.AUTO_REJECTED);
             request.setRespondedAt(LocalDateTime.now());
             return;
@@ -340,7 +356,17 @@ public class PartyFacade {
 
         partyMemberService.connectMemberWithParty(targetParty, request.getRequester(), PartyMemberRole.MEMBER);
 
-        webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.ACCEPTED, "파티 참가 요청이 수락되었습니다.", request.getRequester().getName() + "님의 요청을 수락하였습니다.");
+        // 요청자, 방장에게 알림
+        partyJoinRequestWebSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.ACCEPTED, "파티 참가 요청이 수락되었습니다.", request.getRequester().getName() + "님의 요청을 수락하였습니다.");
+
+        // 브로드 캐스트는 파티에 실질적인 업데이트가 발생해야
+        // 알림을 통해 재조회 등을 수행하는 것이 이상적.
+        // 따라서 수락만 브로드캐스트 알림하면 될 듯함.
+        // 해당 파티원들 내부 브로드캐스트 채널에 알림
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(targetParty.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, request.getRequester().getName() + "님이 참가하였습니다.", PartyEventType.MEMBER_JOIN);
+
+        // 해당 파티 외부의 유저들 브로드캐스트 채널에 알림
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(targetParty.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_EXTERNAL, "파티 id: %d에 해당하는 파티가 업데이트되었습니다.".formatted(targetParty.getId()), PartyEventType.PARTY_UPDATE);
     }
 
     // 3. 참가 요청 거절
@@ -360,7 +386,7 @@ public class PartyFacade {
 
         PartyMember hostMember = targetParty.getPartyMemberList().stream().filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
-        webSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 참가 요청이 거절되었습니다.", request.getRequester().getName() + "님의 요청을 거절하였습니다.");
+        partyJoinRequestWebSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 참가 요청이 거절되었습니다.", request.getRequester().getName() + "님의 요청을 거절하였습니다.");
     }
 
     // 4. 참가 요청 취소
@@ -385,7 +411,7 @@ public class PartyFacade {
         PartyMember host = request.getParty().getPartyMemberList().stream()
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
-        webSocketUtils.notifyParticipants(request, host, JoinRequestStatus.CANCELED, "파티 참가 요청이 취소되었습니다.", requester.getName() + "님이 요청을 취소하였습니다.");
+        partyJoinRequestWebSocketUtils.notifyParticipants(request, host, JoinRequestStatus.CANCELED, "파티 참가 요청이 취소되었습니다.", requester.getName() + "님이 요청을 취소하였습니다.");
     }
 
     private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {
