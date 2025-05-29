@@ -220,6 +220,13 @@ public class PartyFacade {
         return ResponseEntity.ok(partyDtos);
     }
 
+    // 재조회 등으로 파티 상태를 최신 상태로 유지하기 위한 조회용 메서드
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getPartyDetailsById(Long partyId) {
+        Party party = partyService.findPartyWithStopovers(partyId);
+        return ResponseEntity.ok(toPartyResponseDto(party));
+    }
+
     @Transactional(readOnly = true)
     public ResponseEntity<?> getMyPartyList(String email) {
         Member member = memberService.getUserByEmail(email);
@@ -300,6 +307,16 @@ public class PartyFacade {
         partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, "%s님의 지불이 확인되었습니다.".formatted(targetStatus.getPartyMember().getMember().getName()), PartyEventType.PARTY_UPDATE);
 
         return toFinalPaymentStatusResponseDto(paymentStatusMap, updatedParty);
+    }
+
+    // 파티 업데이트 등으로 재조회를 위한 단순 조회용 메서드
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> getPaymentStatusListByPartyId(Long partyId) {
+        Party targetParty = partyService.findPartyWithStopovers(partyId);
+        List<PaymentStatus> paymentStatusList = paymentStatusService.findPaymentStatusListByStopoverIn(targetParty.getStopovers());
+        Map<Long, List<PaymentStatus>> paymentStatusMap = paymentStatusList.stream()
+                .collect(Collectors.groupingBy(ps -> ps.getStopover().getId()));
+        return toFinalPaymentStatusResponseDto(paymentStatusMap, targetParty);
     }
 
     // 1. 참가 요청 생성
