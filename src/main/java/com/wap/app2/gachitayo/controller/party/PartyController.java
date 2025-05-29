@@ -19,6 +19,11 @@ import java.util.List;
 public class PartyController {
     private final PartyFacade partyFacade;
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getParty(@PathVariable("id") Long id) {
+        return partyFacade.getPartyDetailsById(id);
+    }
+
     @GetMapping
     public ResponseEntity<?> getMyParties(@AuthenticationPrincipal MemberDetails memberDetails) {
         return partyFacade.getMyPartyList(memberDetails.getUsername());
@@ -62,6 +67,11 @@ public class PartyController {
     @PatchMapping("/{id}/fare/confirm")
     public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
         return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
+    }
+
+    @GetMapping("/{id}/final-fare")
+    public ResponseEntity<?> getFinalPaymentStatusList(@PathVariable("id") Long id) {
+        return partyFacade.getPaymentStatusListByPartyId(id);
     }
 
     @EventListener
