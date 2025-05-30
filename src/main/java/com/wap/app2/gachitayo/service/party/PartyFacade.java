@@ -357,6 +357,8 @@ public class PartyFacade {
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
         partyJoinRequestWebSocketUtils.notifyParticipants(pendingRequest, host, JoinRequestStatus.PENDING, "파티 참가 요청을 보냈습니다.", requester.getName() + "님이 해당 파티에 참가 요청을 보냈습니다.");
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(party.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, requester.getName() + "님이 해당 파티에 참가 요청을 보냈습니다.", PartyEventType.MEMBER_JOIN);
     }
 
     // 2. 참가 요청 수락
@@ -417,6 +419,8 @@ public class PartyFacade {
         PartyMember hostMember = targetParty.getPartyMemberList().stream().filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
         partyJoinRequestWebSocketUtils.notifyParticipants(request, hostMember, JoinRequestStatus.REJECTED, "파티 참가 요청이 거절되었습니다.", request.getRequester().getName() + "님의 요청을 거절하였습니다.");
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(targetParty.getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, request.getRequester().getName() + "님의 파티 참가 요청을 거절하였습니다.", PartyEventType.MEMBER_REJECT);
     }
 
     // 4. 참가 요청 취소
@@ -442,6 +446,8 @@ public class PartyFacade {
                 .filter(pm -> pm.getMemberRole().equals(PartyMemberRole.HOST)).findFirst().orElseThrow(() -> new TagogayoException(ErrorCode.NOT_IN_PARTY));
 
         partyJoinRequestWebSocketUtils.notifyParticipants(request, host, JoinRequestStatus.CANCELED, "파티 참가 요청이 취소되었습니다.", requester.getName() + "님이 요청을 취소하였습니다.");
+
+        partyJoinRequestWebSocketUtils.broadcastPartyUpdate(request.getParty().getId(), PartyJoinRequestWebSocketUtils.BROADCAST_FOR_INTERNAL, requester.getName() + "님이 파티 참가 요청을 취소하였습니다.", PartyEventType.MEMBER_CANCEL);
     }
 
     private ResponseEntity<?> toFinalPaymentStatusResponseDto(Map<Long, List<PaymentStatus>> paymentStatusMap, Party updatedParty) {

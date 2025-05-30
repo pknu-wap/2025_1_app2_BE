@@ -4,8 +4,8 @@ public enum PartyEventType {
     // PartyMember
     MEMBER_JOIN,
     MEMBER_LEAVE,     // not implementation
-    MEMBER_CANCEL,    // is this type needed?
-    MEMBER_REJECT,    // 2222
+    MEMBER_CANCEL,
+    MEMBER_REJECT,
 
     // Party
     PARTY_CREATE,
