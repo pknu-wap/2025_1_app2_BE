@@ -4,10 +4,13 @@ import com.wap.app2.gachitayo.domain.member.MemberDetails;
 import com.wap.app2.gachitayo.dto.request.*;
 import com.wap.app2.gachitayo.service.party.PartyFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.socket.messaging.SessionConnectEvent;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -15,6 +18,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PartyController {
     private final PartyFacade partyFacade;
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        return partyFacade.getPartyDetailsById(memberDetails.getUsername(), id);
+    }
 
     @GetMapping
     public ResponseEntity<?> getMyParties(@AuthenticationPrincipal MemberDetails memberDetails) {
@@ -31,10 +39,10 @@ public class PartyController {
         return partyFacade.addStopoverToParty(memberDetails.getUsername(), id, requestDto);
     }
 
-    @PostMapping("/{id}/attend")
-    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
-        return partyFacade.attendParty(memberDetails.getUsername(), id);
-    }
+//    @PostMapping("/{id}/attend")
+//    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+//        return partyFacade.attendParty(memberDetails.getUsername(), id);
+//    }
 
     @PostMapping("/search")
     public ResponseEntity<?> searchPartiesWithDestinationLocation(@AuthenticationPrincipal MemberDetails memberDetails, @RequestBody PartySearchRequestDto requestDto) {
@@ -59,5 +67,41 @@ public class PartyController {
     @PatchMapping("/{id}/fare/confirm")
     public ResponseEntity<?> reflectConfirmedFare(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody FareConfirmRequestDto requestDto) {
         return partyFacade.reflectPayment(id, memberDetails.getUsername(), requestDto);
+    }
+
+    @GetMapping("/{id}/final-fare")
+    public ResponseEntity<?> getFinalPaymentStatusList(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        return partyFacade.getPaymentStatusListByPartyId(memberDetails.getUsername(), id);
+    }
+
+    @EventListener
+    public void handleSessionConnectedEvent(SessionConnectEvent event) {
+        Principal user = event.getUser();
+        System.out.println("✅ WebSocket 연결됨 - 사용자: " + (user != null ? user.getName() : "익명"));
+    }
+
+    // attendance
+    @PostMapping("/{id}/attend")
+    public ResponseEntity<?> attendToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id) {
+        partyFacade.requestToJoinParty(id, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/accept")
+    public ResponseEntity<?> acceptToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.acceptJoinRequest(id, requestDto, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/reject")
+    public ResponseEntity<?> rejectToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.rejectJoinRequest(id, requestDto, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/attend/cancel")
+    public ResponseEntity<?> cancelToParty(@AuthenticationPrincipal MemberDetails memberDetails, @PathVariable("id") Long id, @RequestBody PartyJoinRequestSocketRequestDto requestDto) {
+        partyFacade.cancelJoinRequest(id, requestDto, memberDetails.getUsername());
+        return ResponseEntity.ok().build();
     }
 }
