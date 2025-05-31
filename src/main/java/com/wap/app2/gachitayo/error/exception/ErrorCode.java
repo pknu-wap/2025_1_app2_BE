@@ -30,12 +30,19 @@ public enum ErrorCode {
 
     //Party
     PARTY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "PARTY-404-1", "존재하지 않는 파티입니다."),
+    NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-1", "해당 파티의 유저가 아니거나 찾을 수 없습니다."),
+    NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY-403-2", "해당 파티의 방장이 아닙니다."),
+    NOT_BOOKKEEPER(HttpStatus.FORBIDDEN.value(), "PARTY-403-3", "해당 파티의 최종 결산자가 아닙니다."),
     EXCEED_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-1", "인원이 가득 찬 파티입니다."),
     ALREADY_PARTY_MEMBER(HttpStatus.CONFLICT.value(), "PARTY-409-2", "이미 속한 파티입니다."),
     NOT_MATCH_GENDER_OPTION(HttpStatus.CONFLICT.value(), "PARTY-409-3", "파티 성별 옵션에 맞지 않는 유저입니다."),
-    NOT_IN_PARTY(HttpStatus.FORBIDDEN.value(), "PARTY-403-4", "해당 파티의 유저가 아니거나 찾을 수 없습니다."),
-    NOT_HOST(HttpStatus.FORBIDDEN.value(), "PARTY-403-5", "해당 파티의 방장이 아닙니다."),
-    NOT_BOOKKEEPER(HttpStatus.FORBIDDEN.value(), "PARTY-403-6", "해당 파티의 최종 결산자가 아닙니다."),
+
+    // JoinRequest
+    JOIN_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "JOIN_REQUEST-404-1", "존재하지 않는 파티 요청입니다."),
+    ALREADY_JOIN_REQUEST(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-1", "이미 참가 요청한 파티입니다."),
+    ALREADY_REQUEST_HANDLED(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-2", "이미 요청이 처리된 참가 요청입니다."),
+    JOIN_REQUEST_NOT_MATCH_PARTY(HttpStatus.CONFLICT.value(),  "JOIN_REQUEST-409-3", "참가 요청 파티 id와 참가할 파티 id가 일치하지 않습니다."),
+    JOIN_REQUEST_NOT_MATCH_REQUESTER(HttpStatus.CONFLICT.value(), "JOIN_REQUEST-409-4", "현재 요청자와 파티 참가 요청자가 일치하지 않습니다."),
 
     //Stopover
     STOPOVER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "STOPOVER-404-1", "존재하지 않는 경유지입니다."),
