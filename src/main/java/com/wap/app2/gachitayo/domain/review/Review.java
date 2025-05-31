@@ -6,9 +6,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
 @Getter
 @Setter
@@ -39,8 +36,6 @@ public class Review {
     @DecimalMax("5.0")
     private double score;
 
-    @ElementCollection
-    @CollectionTable(name = "review_tags", joinColumns = @JoinColumn(name = "review_id"))
-    @Column(name = "tag")
-    private Set<String> tags = new HashSet<>();
+    @Column(length = 2100) // 최대 500자 검증
+    private String contents;
 }
