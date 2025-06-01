@@ -6,6 +6,7 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.review.Review;
 import com.wap.app2.gachitayo.dto.request.ReviewMemberRequest;
 import com.wap.app2.gachitayo.dto.response.ReviewListResponse;
+import com.wap.app2.gachitayo.dto.response.UnreviewedMemberResponse;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
@@ -74,6 +75,20 @@ public class ReviewService {
 
         //소수 둘째자리까지 반올림
         return Math.round(total_score * 100) / 100.0;
+    }
+
+    public ResponseEntity<?> getUnreviewedMembers(String authorEmail) {
+        Member author = findMemberByEmail(authorEmail);
+        List<Party> myParties = partyService.findPartiesWithDetailsByMember(author.getId());
+
+        List<UnreviewedMemberResponse> unreviewedMembers = myParties.stream()
+                .flatMap(party -> party.getPartyMemberList().stream()
+                        .filter(partyMember -> !partyMember.getMember().getId().equals(author.getId()))
+                        .filter(partyMember -> !isExistReview(party, author, partyMember.getMember()))
+                        .map(UnreviewedMemberResponse::from))
+                .toList();
+
+        return ResponseEntity.ok(unreviewedMembers);
     }
 
     private Member findMemberByEmail(String email) {
