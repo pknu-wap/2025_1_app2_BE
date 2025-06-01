@@ -9,22 +9,27 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/api/{email}/review")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @RestController
 public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @PostMapping
+    @PostMapping("/{email}/review")
     public ResponseEntity<?> addMemberReview(@PathVariable String email,
                                              @AuthenticationPrincipal MemberDetails memberDetails,
                                              @RequestBody @Validated ReviewMemberRequest request) {
         return reviewService.addMemberReview(memberDetails.getUsername(), email, request);
     }
 
-    @GetMapping
+    @GetMapping("/{email}/review")
     public ResponseEntity<?> getMemberReview(@PathVariable String email) {
         return reviewService.getMemberReview(email);
+    }
+
+    @GetMapping("/unreviewed")
+    public ResponseEntity<?> getUnreviewedMembers(@AuthenticationPrincipal MemberDetails memberDetails) {
+        return reviewService.getUnreviewedMembers(memberDetails.getUsername());
     }
 }
