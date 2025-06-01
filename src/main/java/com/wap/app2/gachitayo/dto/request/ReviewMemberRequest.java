@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
+import java.util.Set;
+
 public record ReviewMemberRequest(
         @NotBlank
         Long party_id,
@@ -16,7 +18,6 @@ public record ReviewMemberRequest(
         double score,
 
         @NotNull
-        @Length(max = 500)
-        String contents
+        Set<String> tags
 ) {
 }
