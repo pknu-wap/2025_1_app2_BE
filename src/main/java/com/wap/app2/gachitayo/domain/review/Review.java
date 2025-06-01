@@ -42,5 +42,6 @@ public class Review {
     @ElementCollection
     @CollectionTable(name = "review_tags", joinColumns = @JoinColumn(name = "review_id"))
     @Column(name = "tag")
+    @Builder.Default
     private Set<String> tags = new HashSet<>();
 }
