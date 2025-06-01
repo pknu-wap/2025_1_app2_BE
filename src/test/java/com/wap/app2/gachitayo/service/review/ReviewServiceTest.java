@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -54,7 +55,7 @@ class ReviewServiceTest {
         party.getPartyMemberList().add(partyMember);
 //        party.setPartyMemberList(partyMemberList);
 
-        ReviewMemberRequest request = new ReviewMemberRequest(1L, 4.5, "좋은 파티!");
+        ReviewMemberRequest request = new ReviewMemberRequest(1L, 4.5, Set.of("#시간 엄수","#굿 매너"));
 
         when(memberRepository.findByEmail("author@domain.com")).thenReturn(Optional.of(author));
         when(memberRepository.findByEmail("target@domain.com")).thenReturn(Optional.of(target));
@@ -90,7 +91,7 @@ class ReviewServiceTest {
         // when & then
         TagogayoException exception = assertThrows(TagogayoException.class, () ->
                 reviewService.addMemberReview("author@domain.com", "target@domain.com",
-                        new ReviewMemberRequest(1L, 4.5, "중복 리뷰"))
+                        new ReviewMemberRequest(1L, 4.5, Set.of("#시간 엄수")))
         );
         assertEquals(ErrorCode.ALREADY_REVIEW, exception.getErrorCode());
     }

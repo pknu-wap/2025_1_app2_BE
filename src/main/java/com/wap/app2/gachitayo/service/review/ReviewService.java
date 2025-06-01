@@ -1,5 +1,6 @@
 package com.wap.app2.gachitayo.service.review;
 
+import com.wap.app2.gachitayo.Enum.ReviewTag;
 import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.review.Review;
@@ -38,6 +39,10 @@ public class ReviewService {
 
         if (isExistReview(party, author, target)) {
             throw new TagogayoException(ErrorCode.ALREADY_REVIEW);
+        }
+
+        for (String tag : request.tags()) {
+            ReviewTag.fromValue(tag);
         }
 
         Review review = createReview(author, target, party, request);
@@ -91,7 +96,7 @@ public class ReviewService {
                 .target(target)
                 .party(party)
                 .score(request.score())
-                .contents(request.contents())
+                .tags(request.tags())
                 .build();
     }
 }

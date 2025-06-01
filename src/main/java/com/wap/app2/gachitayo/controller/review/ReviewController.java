@@ -17,7 +17,9 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping
-    public ResponseEntity<?> addMemberReview(@PathVariable String email, @AuthenticationPrincipal MemberDetails memberDetails, @RequestBody @Validated ReviewMemberRequest request) {
+    public ResponseEntity<?> addMemberReview(@PathVariable String email,
+                                             @AuthenticationPrincipal MemberDetails memberDetails,
+                                             @RequestBody @Validated ReviewMemberRequest request) {
         return reviewService.addMemberReview(memberDetails.getUsername(), email, request);
     }
 
