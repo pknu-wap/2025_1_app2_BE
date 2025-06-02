@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -89,6 +90,23 @@ public class ReviewService {
                 .toList();
 
         return ResponseEntity.ok(unreviewedMembers);
+    }
+
+    public List<String> getTopTwoTagsByMember(Long memberId) {
+        List<Review> reviews = reviewRepository.findByTargetId(memberId);
+        
+        Map<String, Long> tagCounts = reviews.stream()
+                .flatMap(review -> review.getTags().stream())
+                .collect(Collectors.groupingBy(
+                        tag -> tag,
+                        Collectors.counting()
+                ));
+
+        return tagCounts.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(2)
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
     }
 
     private Member findMemberByEmail(String email) {

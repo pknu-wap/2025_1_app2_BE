@@ -303,6 +303,9 @@ public class PartyFacade {
 
         paymentStatusService.updatePaidStatus(targetStatus, true);
 
+        //아낀 금액 추가
+        paymentStatusService.saveSavedMoney(targetStatus);
+
         // Party + Stopover
         Party updatedParty = partyService.findPartyWithStopovers(partyId);
         // PaymentStatus + PartyMember + Member
