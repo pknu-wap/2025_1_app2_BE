@@ -5,6 +5,8 @@ import com.wap.app2.gachitayo.dto.request.EditMemberRequest;
 import com.wap.app2.gachitayo.dto.response.MemberProfileResponseDto;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
+import com.wap.app2.gachitayo.repository.fare.SavedMoneyRepository;
+import com.wap.app2.gachitayo.repository.member.MemberReportRepository;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import com.wap.app2.gachitayo.service.review.ReviewService;
 import jakarta.transaction.Transactional;
@@ -12,12 +14,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final ReviewService reviewService;
+    private final ReviewService reviewService;\
+    private final MemberReportRepository memberReportRepository;
+    private final SavedMoneyRepository savedMoneyRepository;
 
     public ResponseEntity<MemberProfileResponseDto> getMemberProfile(String email) {
         Member member = this.getUserByEmail(email);
@@ -27,6 +33,8 @@ public class MemberService {
         }
 
         double review_rate = reviewService.getReviewRateByMember(member.getId());
+        List<String> topTags = reviewService.getTopTwoTagsByMember(member.getId());
+        int totalSavedAmount = savedMoneyRepository.sumSavedAmountByMemberId(member.getId());
 
         MemberProfileResponseDto dto = new MemberProfileResponseDto(
                 member.getName(),
@@ -35,7 +43,9 @@ public class MemberService {
                 member.getGender(),
                 member.getProfileImageUrl(),
                 member.getEmail(),
-                review_rate
+                review_rate,
+                topTags,
+                totalSavedAmount
         );
 
         return ResponseEntity.ok(dto);
@@ -50,6 +60,8 @@ public class MemberService {
         }
 
         double review_rate = reviewService.getReviewRateByMember(member.getId());
+        List<String> topTags = reviewService.getTopTwoTagsByMember(member.getId());
+        int totalSavedAmount = savedMoneyRepository.sumSavedAmountByMemberId(member.getId());
 
         member.setName(editMemberRequest.name());
 
@@ -60,7 +72,9 @@ public class MemberService {
                 member.getGender(),
                 member.getProfileImageUrl(),
                 member.getEmail(),
-                review_rate
+                review_rate,
+                topTags,
+                totalSavedAmount
         );
 
         return ResponseEntity.ok(dto);
