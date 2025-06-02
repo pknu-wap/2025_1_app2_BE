@@ -6,6 +6,7 @@ import com.wap.app2.gachitayo.domain.party.Party;
 import com.wap.app2.gachitayo.domain.review.Review;
 import com.wap.app2.gachitayo.dto.request.ReviewMemberRequest;
 import com.wap.app2.gachitayo.dto.response.ReviewListResponse;
+import com.wap.app2.gachitayo.dto.response.UnreviewedMemberResponse;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
 import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
