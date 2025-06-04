@@ -16,6 +16,8 @@ import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
+    private static final Logger log = LoggerFactory.getLogger(GoogleAuthService.class);
     @Value("${spring.google.iosID}")
     private String ios_clientID;
 
@@ -94,6 +97,8 @@ public class GoogleAuthService {
         String rfToken = requestDto.refreshToken();
 
         boolean isValid = jwtTokenProvider.isValid(rfToken);
+        log.info("========= 토큰 재발급 =========");
+        log.info("rfToken: " + rfToken);
 
         if (!isValid) {
             //rf expired
@@ -110,6 +115,10 @@ public class GoogleAuthService {
         redisTemplate.delete(rfToken);
 
         Token token = generateToken(email);
+
+        log.info("========= 토큰 재발급 완료 =========");
+        log.info("token: " + token.accessToken());
+        log.info("rfToken: " + token.refreshToken());
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }

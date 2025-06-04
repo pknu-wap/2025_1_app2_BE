@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.Scanner;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +77,7 @@ public class SmsAuthService {
                             && contentType.toLowerCase().contains("text/plain")
                             && contentType.toLowerCase().contains("euc-kr")) {
                         try (InputStream is = bodyPart.getInputStream();
-                             java.util.Scanner scanner = new java.util.Scanner(is, "EUC-KR")) {
+                            Scanner scanner = new Scanner(is, "EUC-KR")) {
                             scanner.useDelimiter("\\A");
                             String textFileContent = scanner.hasNext() ? scanner.next() : "";
                             if (textFileContent != null && textFileContent.contains(searchKey)) {
@@ -137,7 +139,7 @@ public class SmsAuthService {
                 String fromEmail = message.getFrom()[0].toString();
                 // "이름 <이메일>" 형식에서 이메일만 추출
                 String email = fromEmail;
-                Matcher matcher = java.util.regex.Pattern.compile("<([^<>@\\s]+@[^<>@\\s]+)>").matcher(fromEmail);
+                Matcher matcher = Pattern.compile("<([^<>@\\s]+@[^<>@\\s]+)>").matcher(fromEmail);
                 if (matcher.find()) {
                     email = matcher.group(1);
                 }

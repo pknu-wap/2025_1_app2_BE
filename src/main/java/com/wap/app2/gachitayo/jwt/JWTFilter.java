@@ -42,6 +42,10 @@ public class JWTFilter extends OncePerRequestFilter {
 
         String token = authorization.split(" ")[1];
 
+        log.info("========= 토큰 접근 =========");
+        log.info("token: {}", token);
+        log.info("request 주소: {}", request.getRequestURI());
+
         if (!jwtTokenProvider.isValid(token)) {
             log.info("Token not valid");
             throw new TagogayoException(ErrorCode.INVALID_JWT);
