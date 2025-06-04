@@ -1,6 +1,8 @@
 package com.wap.app2.gachitayo.config.websocket;
 
 import com.wap.app2.gachitayo.domain.member.Member;
+import com.wap.app2.gachitayo.error.exception.ErrorCode;
+import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +42,8 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                     attributes.put("memberEmail", email); // WebSocket 세션에 저장
                     return true;
                 }
+            } else {
+                throw new TagogayoException(ErrorCode.INVALID_JWT);
             }
             log.warn("[WebSocket 인증 실패] token: {}", token);
         }
