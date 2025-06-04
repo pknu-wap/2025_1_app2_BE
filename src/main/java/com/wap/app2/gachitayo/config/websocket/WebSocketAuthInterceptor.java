@@ -2,13 +2,14 @@ package com.wap.app2.gachitayo.config.websocket;
 
 import com.wap.app2.gachitayo.domain.member.Member;
 import com.wap.app2.gachitayo.error.exception.ErrorCode;
-import com.wap.app2.gachitayo.error.exception.TagogayoException;
 import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -31,7 +32,7 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             WebSocketHandler wsHandler,
             Map<String, Object> attributes
     ) throws Exception {
-        if (request instanceof ServletServerHttpRequest servletRequest) {
+        if (request instanceof ServletServerHttpRequest servletRequest && response instanceof ServletServerHttpResponse servletResponse) {
             String token = servletRequest.getServletRequest().getParameter("token");
             log.info("[WebSocket 연결 요청] token: {}", token);
             if (token != null && jwtTokenProvider.isValid(token)) {
@@ -43,7 +44,23 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                     return true;
                 }
             } else {
-                throw new TagogayoException(ErrorCode.INVALID_JWT);
+                String errorLogsFormat = """
+                {
+                    "status": "%s",
+                    "code": "%s",
+                    "message": "%s"
+                }
+                """;
+                HttpServletResponse _response = servletResponse.getServletResponse();
+                ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
+                _response.setContentType("application/json; charset=UTF-8");
+
+                _response.setStatus(errorCode.getStatus());
+                _response.getWriter().write(errorLogsFormat.formatted(
+                        errorCode.getStatus(),
+                        errorCode.getCode(),
+                        errorCode.getMessage()
+                ));
             }
             log.warn("[WebSocket 인증 실패] token: {}", token);
         }
