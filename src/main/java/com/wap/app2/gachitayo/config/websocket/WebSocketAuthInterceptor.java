@@ -13,6 +13,7 @@ import org.springframework.http.server.ServletServerHttpResponse;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
@@ -32,16 +33,11 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             WebSocketHandler wsHandler,
             Map<String, Object> attributes
     ) throws Exception {
-        String errorLogsFormat = """
-                {
-                    "status": "%s",
-                    "code": "%s",
-                    "message": "%s"
-                }
-                """;
         if (request instanceof ServletServerHttpRequest servletRequest && response instanceof ServletServerHttpResponse servletResponse) {
+            HttpServletResponse httpServletResponse = servletResponse.getServletResponse();
             String token = servletRequest.getServletRequest().getParameter("token");
             log.info("[WebSocket 연결 요청] token: {}", token);
+
             if (token != null && jwtTokenProvider.isValid(token)) {
                 String email = jwtTokenProvider.getEmailByToken(token);
                 Member member = memberRepository.findByEmail(email).orElse(null);
@@ -50,32 +46,12 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                     attributes.put("memberEmail", email); // WebSocket 세션에 저장
                     return true;
                 } else {
-                    HttpServletResponse _response = servletResponse.getServletResponse();
-                    ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
-                    _response.setContentType("application/json; charset=UTF-8");
-
-                    _response.setStatus(errorCode.getStatus());
-                    _response.getWriter().write(errorLogsFormat.formatted(
-                            errorCode.getStatus(),
-                            errorCode.getCode(),
-                            errorCode.getMessage()
-                    ));
-                    log.warn("[WebSocket 인증 실패] member 없음 target_token: {}", errorLogsFormat);
-                    return false;
+                    log.warn("[WebSocket 인증 실패] member 없음 target_token: {}", token);
+                    return writeExceptionHttpResponse(httpServletResponse, ErrorCode.INVALID_REQUEST);
                 }
             } else {
-                HttpServletResponse _response = servletResponse.getServletResponse();
-                ErrorCode errorCode = ErrorCode.EXPIRED_JWT;
-                _response.setContentType("application/json; charset=UTF-8");
-
-                _response.setStatus(errorCode.getStatus());
-                _response.getWriter().write(errorLogsFormat.formatted(
-                        errorCode.getStatus(),
-                        errorCode.getCode(),
-                        errorCode.getMessage()
-                ));
                 log.warn("[WebSocket 인증 실패] 유효하지 않은 토큰 target_token: {}", token);
-                return false;
+                return writeExceptionHttpResponse(httpServletResponse, ErrorCode.INVALID_JWT);
             }
         }
         log.warn("[WebSocket 연결 오류] 요청 형식이 잘못되었습니다.");
@@ -93,5 +69,24 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
             System.out.println("Websocket Handshake Error");
             exception.printStackTrace();
         }
+    }
+
+    private boolean writeExceptionHttpResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
+        String errorLogsFormat = """
+                {
+                    "status": "%s",
+                    "code": "%s",
+                    "message": "%s"
+                }
+                """;
+
+        response.setContentType("application/json; charset=UTF-8");
+        response.setStatus(errorCode.getStatus());
+        response.getWriter().write(errorLogsFormat.formatted(
+                errorCode.getStatus(),
+                errorCode.getCode(),
+                errorCode.getMessage()
+        ));
+        return false;
     }
 }
