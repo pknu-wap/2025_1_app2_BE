@@ -74,10 +74,11 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
                         errorCode.getCode(),
                         errorCode.getMessage()
                 ));
+                log.warn("[WebSocket 인증 실패] 유효하지 않은 토큰 target_token: {}", token);
+                return false;
             }
-            log.warn("[WebSocket 인증 실패] 유효하지 않은 토큰 target_token: {}", token);
-            return false;
         }
+        log.warn("[WebSocket 연결 오류] 요청 형식이 잘못되었습니다.");
         return false;
     }
 
