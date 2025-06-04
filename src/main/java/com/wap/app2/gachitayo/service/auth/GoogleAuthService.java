@@ -69,7 +69,7 @@ public class GoogleAuthService {
         if (!phone.equals(requestDto.phone())) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
 
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
-        if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
+//        if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
         Member existMember = memberService.getUserByEmail(email);
 
