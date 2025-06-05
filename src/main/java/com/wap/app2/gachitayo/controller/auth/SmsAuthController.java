@@ -24,9 +24,4 @@ public class SmsAuthController {
     public ResponseEntity<?> verifySmsSessionKey(@RequestBody @Validated SmsKeyVerifyRequest request) {
         return smsAuthService.verifySmsSessionKey(request);
     }
-
-//    @PostMapping("/test")
-//    public ResponseEntity<?> test() {
-//        return ResponseEntity.ok(smsAuthService.findLatestMessageContaining("test"));
-//    }
 }

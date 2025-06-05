@@ -16,6 +16,8 @@ import com.wap.app2.gachitayo.jwt.JwtTokenProvider;
 import com.wap.app2.gachitayo.repository.member.MemberRepository;
 import com.wap.app2.gachitayo.service.member.MemberService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +31,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class GoogleAuthService {
+    private static final Logger log = LoggerFactory.getLogger(GoogleAuthService.class);
     @Value("${spring.google.iosID}")
     private String ios_clientID;
 

@@ -25,8 +25,8 @@ public class PartyJoinRequestWebSocketController {
     }
 
 
-    @MessageMapping("/join-request-response")
-    public void handleJoinRequest(@AuthenticationPrincipal MemberDetails memberDetails, Long partyId) {
-        partyFacade.requestToJoinParty(partyId, memberDetails.getUsername());
-    }
+//    @MessageMapping("/join-request-response")
+//    public void handleJoinRequest(@AuthenticationPrincipal MemberDetails memberDetails, Long partyId) {
+//        partyFacade.requestToJoinParty(partyId, memberDetails.getUsername());
+//    }
 }
