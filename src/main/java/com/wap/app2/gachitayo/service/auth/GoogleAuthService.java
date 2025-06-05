@@ -69,7 +69,7 @@ public class GoogleAuthService {
         if (!phone.equals(requestDto.phone())) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
 
         //구글 토큰을 검증해서 뒷부분만 확인하면 됨
-//        if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
+        if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
         Member existMember = memberService.getUserByEmail(email);
 
@@ -97,8 +97,6 @@ public class GoogleAuthService {
         String rfToken = requestDto.refreshToken();
 
         boolean isValid = jwtTokenProvider.isValid(rfToken);
-        log.info("========= 토큰 재발급 =========");
-        log.info("rfToken: " + rfToken);
 
         if (!isValid) {
             //rf expired
@@ -115,10 +113,6 @@ public class GoogleAuthService {
         redisTemplate.delete(rfToken);
 
         Token token = generateToken(email);
-
-        log.info("========= 토큰 재발급 완료 =========");
-        log.info("token: " + token.accessToken());
-        log.info("rfToken: " + token.refreshToken());
 
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }

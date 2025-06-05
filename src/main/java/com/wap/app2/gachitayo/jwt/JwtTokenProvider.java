@@ -11,14 +11,15 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 
 @Slf4j
 @Component
 public class JwtTokenProvider {
     private final SecretKey secretKey;
-    private final Long AccessTokenExpiredMs = 1000L * 60L * 60L; // 1시간
-    private final Long RefreshTokenExpiredMs = 7 * 24 * 1000L * 60L * 60L; // 1주일
+    private final Long AccessTokenExpiredMs = Duration.ofHours(1).toMillis(); // 1시간
+    private final Long RefreshTokenExpiredMs = Duration.ofDays(7).toMillis(); // 1주일
 
     public JwtTokenProvider(@Value("${spring.jwt.secret}") String secret) {
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());

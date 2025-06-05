@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +37,7 @@ public class SmsAuthService {
     public ResponseEntity<?> getSmsSessionKey() {
         String sessionKey = getSessionKey(15);
 
-        redisTemplate.opsForValue().set(sessionKey, "PENDING", Duration.ofMinutes(5));
+        redisTemplate.opsForValue().set(sessionKey, "PENDING:"+new Date(), Duration.ofMinutes(5));
 
         return ResponseEntity.ok(new SmsKeyResponse(
                 verify_email,
@@ -127,40 +130,49 @@ public class SmsAuthService {
             Store store = manager.getStore();
             inbox = store.getFolder("INBOX");
             inbox.open(Folder.READ_ONLY);
+            String _date = redisTemplate.opsForValue().get(searchKey).substring(8);
+            SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+            Date parsed = sdf.parse(_date);
 
             int totalMessages = inbox.getMessageCount();
-            int start = Math.max(1, totalMessages - 2); // 최근 3개 메일의 시작 인덱스
-            int end = totalMessages; // 마지막(가장 최근) 메일 인덱스
-
-            Message[] list = inbox.getMessages(start, end);
-
-            for (int i = list.length - 1; i >= 0; i--) {
-                Message message = list[i];
-                String fromEmail = message.getFrom()[0].toString();
-                // "이름 <이메일>" 형식에서 이메일만 추출
-                String email = fromEmail;
-                Matcher matcher = Pattern.compile("<([^<>@\\s]+@[^<>@\\s]+)>").matcher(fromEmail);
-                if (matcher.find()) {
-                    email = matcher.group(1);
+            // 최신 메일부터 오래된 메일까지 역순으로 순회
+            for (int i = totalMessages; i >= 1; i--) {
+                Message message = inbox.getMessage(i);
+                Date sentDate = message.getSentDate();
+                if (sentDate == null || sentDate.before(parsed)) {
+                    // 기준 날짜 이전이면 더 이상 검색하지 않음
+                    break;
                 }
+                try {
+                    String fromEmail = message.getFrom()[0].toString();
+                    // "이름 <이메일>" 형식에서 이메일만 추출
+                    String email = fromEmail;
+                    Matcher matcher = Pattern.compile("<([^<>@\\s]+@[^<>@\\s]+)>").matcher(fromEmail);
+                    if (matcher.find()) {
+                        email = matcher.group(1);
+                    }
 
-                // 도메인 추출
-                String[] emailParts = email.split("@");
-                if (emailParts.length != 2) continue;
-                String domain = emailParts[1];
-                String phoneNumber = emailParts[0];
+                    // 도메인 추출
+                    String[] emailParts = email.split("@");
+                    if (emailParts.length != 2) continue;
+                    String domain = emailParts[1];
+                    String phoneNumber = emailParts[0];
 
-                // ktfmms.magicn.com 도메인일 경우 첨부파일에서 searchKey 포함 여부 확인
-                if ("ktfmms.magicn.com".equalsIgnoreCase(domain)) {
-                    SmsInfoResponse smsInfo = findSmsInfoFromAttachment(message, searchKey, phoneNumber, domain);
-                    if (smsInfo != null) return smsInfo;
-                } else {
-                    // 그 외 도메인은 본문에 searchKey가 있는지 확인
-                    SmsInfoResponse smsInfo = findSmsInfoFromBody(message, searchKey, phoneNumber, domain);
-                    if (smsInfo != null) return smsInfo;
+                    // ktfmms.magicn.com 도메인일 경우 첨부파일에서 searchKey 포함 여부 확인
+                    if ("ktfmms.magicn.com".equalsIgnoreCase(domain)) {
+                        SmsInfoResponse smsInfo = findSmsInfoFromAttachment(message, searchKey, phoneNumber, domain);
+                        if (smsInfo != null) return smsInfo;
+                    } else {
+                        // 그 외 도메인은 본문에 searchKey가 있는지 확인
+                        SmsInfoResponse smsInfo = findSmsInfoFromBody(message, searchKey, phoneNumber, domain);
+                        if (smsInfo != null) return smsInfo;
+                    }
+                } catch (Exception e) {
+                    // 개별 메시지 처리 중 예외는 무시하고 다음 메시지로 진행
+                    continue;
                 }
             }
-
+            // 찾지 못한 경우
             return null;
         } catch (Exception e) {
             return null;
@@ -168,6 +180,60 @@ public class SmsAuthService {
             closeInboxSafely(inbox);
         }
     }
+
+    /**
+     * 코드 주석 처리
+     * 현재 전송한기준부터 inbox를 읽어오기때문에 너무나 느림.
+     * 추후 n개로 변환할 때를 대비해서 레거시 코드 삭제 안합니다.
+     */
+//    public SmsInfoResponse findSmsInfoFromLatestMessages(String searchKey) {
+//        Folder inbox = null;
+//        try {
+//            Store store = manager.getStore();
+//            inbox = store.getFolder("INBOX");
+//            inbox.open(Folder.READ_ONLY);
+//
+//            int totalMessages = inbox.getMessageCount();
+//            int start = Math.max(1, totalMessages - 2); // 최근 3개 메일의 시작 인덱스
+//            int end = totalMessages; // 마지막(가장 최근) 메일 인덱스
+//
+//            Message[] list = inbox.getMessages(start, end);
+//
+//            for (int i = list.length - 1; i >= 0; i--) {
+//                Message message = list[i];
+//                System.out.println(message.getSentDate());
+//                String fromEmail = message.getFrom()[0].toString();
+//                // "이름 <이메일>" 형식에서 이메일만 추출
+//                String email = fromEmail;
+//                Matcher matcher = Pattern.compile("<([^<>@\\s]+@[^<>@\\s]+)>").matcher(fromEmail);
+//                if (matcher.find()) {
+//                    email = matcher.group(1);
+//                }
+//
+//                // 도메인 추출
+//                String[] emailParts = email.split("@");
+//                if (emailParts.length != 2) continue;
+//                String domain = emailParts[1];
+//                String phoneNumber = emailParts[0];
+//
+//                // ktfmms.magicn.com 도메인일 경우 첨부파일에서 searchKey 포함 여부 확인
+//                if ("ktfmms.magicn.com".equalsIgnoreCase(domain)) {
+//                    SmsInfoResponse smsInfo = findSmsInfoFromAttachment(message, searchKey, phoneNumber, domain);
+//                    if (smsInfo != null) return smsInfo;
+//                } else {
+//                    // 그 외 도메인은 본문에 searchKey가 있는지 확인
+//                    SmsInfoResponse smsInfo = findSmsInfoFromBody(message, searchKey, phoneNumber, domain);
+//                    if (smsInfo != null) return smsInfo;
+//                }
+//            }
+//
+//            return null;
+//        } catch (Exception e) {
+//            return null;
+//        } finally {
+//            closeInboxSafely(inbox);
+//        }
+//    }
 
     private void closeInboxSafely(Folder inbox) {
         if (inbox != null && inbox.isOpen()) {
@@ -187,7 +253,7 @@ public class SmsAuthService {
         }
 
         //이미 검증 후 재 검증 삭제
-        if (!sessionValue.equals("PENDING")) {
+        if (!sessionValue.startsWith("PENDING:")) {
             redisTemplate.delete(key);
             throw new TagogayoException(ErrorCode.NOT_VERIFIED_SMS);
         }
