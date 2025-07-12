@@ -17,11 +17,11 @@ public class SmsAuthController {
 
     @GetMapping("/sms")
     public ResponseEntity<?> getSmsSessionKey() {
-        return smsAuthService.getSmsSessionKey();
+        return smsAuthService._getSmsSessionKey();
     }
 
     @PostMapping("/sms/verify")
     public ResponseEntity<?> verifySmsSessionKey(@RequestBody @Validated SmsKeyVerifyRequest request) {
-        return smsAuthService.verifySmsSessionKey(request);
+        return smsAuthService._verifySmsSessionKey(request);
     }
 }
