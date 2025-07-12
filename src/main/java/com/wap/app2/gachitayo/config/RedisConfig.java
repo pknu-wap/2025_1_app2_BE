@@ -20,8 +20,8 @@ public class RedisConfig {
     @Value("${spring.redis.user}")
     private String username;
 
-    @Value("${spring.redis.pw}")
-    private String password;
+//    @Value("${spring.redis.pw}")
+//    private String password;
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
@@ -29,7 +29,7 @@ public class RedisConfig {
         config.setHostName(host);
         config.setPort(port);
         config.setUsername(username);
-        config.setPassword(RedisPassword.of(password));
+//        config.setPassword(RedisPassword.of(password));
         return new LettuceConnectionFactory(config);
     }
 
