@@ -45,6 +45,14 @@ public class SmsAuthService {
         ));
     }
 
+    public ResponseEntity<?> _getSmsSessionKey() {
+        return ResponseEntity.ok(true);
+    }
+
+    public ResponseEntity<?> _verifySmsSessionKey(SmsKeyVerifyRequest request) {
+        return ResponseEntity.ok(true);
+    }
+
     public ResponseEntity<?> verifySmsSessionKey(SmsKeyVerifyRequest request) {
         try {
             // 1. 세션 검증
