@@ -77,7 +77,7 @@ public class GoogleAuthService {
 
         Member member = Member.builder()
                 .name(requestDto.name())
-                .phone(email.substring(10))
+                .phone(email.substring(0,10))
                 .age(requestDto.age())
                 .email(email)
                 .gender(requestDto.gender())
