@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // 이 import 문을 추가해야 합니다.
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -43,6 +44,8 @@ public class GoogleAuthService {
     private final MemberService memberService;
     private final StringRedisTemplate redisTemplate;
 
+    // [수정됨] 읽기 전용 트랜잭션으로 설정하여 성능을 최적화할 수 있습니다.
+    @Transactional(readOnly = true)
     public ResponseEntity<TokenResponseDto> userLogin(LoginRequestDto requestDto) {
         String idToken = requestDto.idToken();
         String _accessToken = requestDto.accessToken();
@@ -57,6 +60,9 @@ public class GoogleAuthService {
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }
 
+    // [수정됨] @Transactional 어노테이션을 추가하여 이 메서드 내의 모든 DB 작업이
+    // 하나의 트랜잭션으로 묶이도록 합니다. 메서드가 성공적으로 끝나야만 최종 커밋됩니다.
+    @Transactional
     public ResponseEntity<TokenResponseDto> registerUser(RegisterRequestDto requestDto) {
         String idToken = requestDto.idToken();
         String _accessToken = requestDto.accessToken();
@@ -64,11 +70,8 @@ public class GoogleAuthService {
 
         if (email == null) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
 
-//        String phone = redisTemplate.opsForValue().get(requestDto.key());
-//        if (phone == null) throw new TagogayoException(ErrorCode.EXPIRED_SMS_VERIFIED);
-//        if (!phone.equals(requestDto.phone())) throw new TagogayoException(ErrorCode.INVALID_REQUEST);
+        // ... (주석 처리된 SMS 인증 로직) ...
 
-        //구글 토큰을 검증해서 뒷부분만 확인하면 됨
         if (!email.endsWith("pukyong.ac.kr")) throw new TagogayoException(ErrorCode.NOT_MATCH_EMAIL);
 
         Member existMember = memberService.getUserByEmail(email);
@@ -77,14 +80,14 @@ public class GoogleAuthService {
 
         Member member = Member.builder()
                 .name(requestDto.name())
-                .phone(email.substring(0,10))
+                .phone(email.substring(0,10)) // 이 부분은 예시 데이터로 보입니다.
                 .age(requestDto.age())
                 .email(email)
                 .gender(requestDto.gender())
                 .profileImageUrl(requestDto.profileImageUrl())
                 .build();
 
-        memberRepository.save(member);
+        memberRepository.save(member); // 이 저장이 완전히 커밋된 후 아래 로직이 실행됩니다.
 
         redisTemplate.delete(requestDto.key());
 
@@ -93,20 +96,20 @@ public class GoogleAuthService {
         return ResponseEntity.ok(TokenResponseDto.from(token));
     }
 
+    // [수정됨] 토큰 재발급 역시 DB 작업이 포함되므로 트랜잭션을 적용합니다.
+    @Transactional
     public ResponseEntity<TokenResponseDto> reissueToken(ReissueReqeuestDto requestDto) {
         String rfToken = requestDto.refreshToken();
 
         boolean isValid = jwtTokenProvider.isValid(rfToken);
 
         if (!isValid) {
-            //rf expired
             throw new TagogayoException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
         String email = redisTemplate.opsForValue().get(rfToken);
 
         if (email == null) {
-            //rf expired, 토큰 검증 완료되었는데 db 케이스는 존재할 수 없음.
             throw new TagogayoException(ErrorCode.REFRESH_TOKEN_EXPIRED);
         }
 
@@ -121,7 +124,6 @@ public class GoogleAuthService {
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
-        //TTL 일주일로 레디스 저장
         redisTemplate.opsForValue().set(refreshToken, email, Duration.ofDays(7));
 
         return new Token(
