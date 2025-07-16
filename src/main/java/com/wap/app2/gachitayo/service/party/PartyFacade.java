@@ -199,11 +199,12 @@ public class PartyFacade {
                 .filter(party -> {
                     int currentPeople = party.getPartyMemberList().size();
                     String memberGender = member.getGender().name();
-                    String partyOption = party.getGenderOption().name().substring(5);
+                    String partyGender = party.getGenderOption().name().substring(5);
 
-                    return currentPeople != party.getMaxPeople()
+                    return currentPeople < party.getMaxPeople()
                             && !partyMemberService.isInParty(party, member)
-                            && (party.getGenderOption().equals(GenderOption.MIXED) || memberGender.equalsIgnoreCase(partyOption));
+                            && (party.getGenderOption().equals(GenderOption.MIXED) || memberGender.equalsIgnoreCase(partyGender))
+                            && !party.getIsExpired();
                 })
                 .map(party -> PartyResponseDto.builder()
                         .id(party.getId())
