@@ -38,6 +38,10 @@ public class Party {
     @Builder.Default
     private GenderOption genderOption = GenderOption.MIXED;
 
+    @NotNull
+    @Builder.Default
+    private Boolean isExpired = false;
+
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 5)
     @Builder.Default
